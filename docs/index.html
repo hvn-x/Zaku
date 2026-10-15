@@ -199,6 +199,11 @@
   .eprow { display:flex; margin-bottom:10px; }
   .seg.small .btn { padding:5px 12px; font-size:.78rem; }
   .card small.meta { color:var(--muted); }
+  .card .stack { position:absolute; top:8px; right:8px; padding:3px 9px; border-radius:999px; font-size:.7rem; font-weight:800; color:var(--accent); background:rgba(0,0,0,.72); border:1px solid var(--accent); }
+  .card.stacked { box-shadow:5px 5px 0 -1px rgba(255,255,255,.07), 10px 10px 0 -2px rgba(255,255,255,.04); }
+  .card.stacked:hover { box-shadow:5px 5px 0 -1px rgba(255,255,255,.07), 10px 10px 0 -2px rgba(255,255,255,.04), 0 14px 34px rgba(138,26,26,.5); }
+  .chk { display:flex; gap:10px; align-items:center; cursor:pointer; font-size:.9rem; }
+  .chk input { width:18px; height:18px; accent-color:var(--main-hi); }
 
   /* ============ Styled dropdowns ============ */
   select.ddn { display:none; }
@@ -428,6 +433,11 @@
         <button class="btn primary" id="alConnect">Connect</button>
         <button class="btn hidden" id="alDisconnect">Disconnect</button>
       </div>
+    </div>
+
+    <div class="box">
+      <h4>Library</h4>
+      <label class="chk"><input type="checkbox" id="groupToggle"> Group seasons of the same show into one card (Already Watched). Movies stay separate.</label>
     </div>
 
     <h3 class="sec">Embed Providers</h3>
@@ -1024,11 +1034,11 @@ function showMyList() {
   if (alToken() && al.id) {
     const tk = listState.token, grid = $('doneGrid');
     $('doneSection').classList.remove('hidden'); grid.appendChild(el('div', 'status', 'Loading…'));
-    fetchCompleted(36).then(list => {
+    fetchCompleted(4).then(list => {
       if (tk !== listState.token) return;
       grid.innerHTML = '';
       if (!list.length) grid.appendChild(el('div', 'status', 'No completed anime on your AniList yet.'));
-      list.forEach(a => grid.appendChild(makeCard(a, () => goWatch(a.id), 'Completed')));
+      groupSeasons(list).forEach(g => grid.appendChild(groupCard(g, 'Completed')));
     }).catch(e => { if (tk === listState.token) grid.textContent = 'Failed to load: ' + e.message; });
   }
 }
@@ -1087,20 +1097,63 @@ async function refreshAlEntries(ids) {
     if (state.anime) { renderEpisodes(); renderSeasons(); }
   } catch (e) { /* optional – local history still works */ }
 }
-async function fetchCompleted(per) {
-  const d = await gql(`query($u:Int,$n:Int){ Page(perPage:$n){ mediaList(userId:$u, type:ANIME, status:COMPLETED, sort:UPDATED_TIME_DESC){ media { ${F} } } } }`, { u: al.id, n: per }, alToken());
-  const list = d.Page.mediaList.map(e => e.media).filter(Boolean);
-  list.forEach(a => mediaCache.set(a.id, a));
-  return list;
+async function fetchCompleted(pages = 2) {
+  const out = [];
+  for (let p = 1; p <= pages; p++) {
+    const d = await gql(`query($u:Int,$p:Int){ Page(page:$p, perPage:50){ pageInfo{ hasNextPage }
+      mediaList(userId:$u, type:ANIME, status:COMPLETED, sort:UPDATED_TIME_DESC){ media { ${F} } } } }`, { u: al.id, p }, alToken());
+    out.push(...d.Page.mediaList.map(e => e.media).filter(Boolean));
+    if (!d.Page.pageInfo.hasNextPage) break;
+  }
+  out.forEach(a => mediaCache.set(a.id, a));
+  return out;
 }
+
+/* Group seasons of the same show into one slot. Entries are linked through PREQUEL/SEQUEL relations
+   (including links to titles that aren't in the list, so S1 + S3 still join via S2). Movies, OVAs and
+   specials stay separate. Returns [{ main, items }] in the original list order. */
+const SERIES_FORMATS = ['TV', 'TV_SHORT', 'ONA'];
+function groupSeasons(list) {
+  if (!store.get('anifin.group', true)) return list.map(a => ({ main: a, items: [a] }));
+  const parent = new Map();
+  const add = x => { if (!parent.has(x)) parent.set(x, x); };
+  const find = x => { while (parent.get(x) !== x) { parent.set(x, parent.get(parent.get(x))); x = parent.get(x); } return x; };
+  const union = (x, y) => { add(x); add(y); parent.set(find(x), find(y)); };
+  const series = a => SERIES_FORMATS.includes(a.format);
+  list.forEach(a => {
+    if (!series(a)) return;
+    add(a.id);
+    (a.relations?.edges || []).forEach(e => { if ((e.relationType === 'PREQUEL' || e.relationType === 'SEQUEL') && SERIES_FORMATS.includes(e.node.format)) union(a.id, e.node.id); });
+  });
+  const groups = new Map(), out = [];
+  list.forEach(a => {
+    if (!series(a)) { out.push({ main: a, items: [a] }); return; }
+    const r = find(a.id);
+    if (!groups.has(r)) { const g = { items: [] }; groups.set(r, g); out.push(g); }
+    groups.get(r).items.push(a);
+  });
+  out.forEach(g => { if (!g.main) { g.items.sort((x, y) => (x.seasonYear || 9999) - (y.seasonYear || 9999) || x.id - y.id); g.main = g.items[0]; } });
+  return out;
+}
+// One card per franchise: earliest entry's poster/title, a "×N" stack badge, opens the watch page (season dropdown switches entries)
+function groupCard(g, label) {
+  const n = g.items.length;
+  const c = makeCard(g.main, () => goWatch(g.main.id), n > 1 ? `${label} • ${n} seasons` : label);
+  if (n > 1) { c.classList.add('stacked'); c.appendChild(el('span', 'stack', '×' + n)); }
+  return c;
+}
+
 // Home row: "Already Watched" (only when AniList is connected and has completed shows)
+let doneToken = 0;
 async function loadWatchedRow() {
   const box = $('doneRow'); if (!box) return;
+  const tk = ++doneToken;                       // ignore stale runs (init + home load can overlap)
   box.innerHTML = '';
   if (!alToken() || !al.id) return;
   try {
-    const list = await fetchCompleted(24);
-    if (list.length) box.appendChild(buildRow('Already Watched', list.map(a => makeCard(a, () => goWatch(a.id), 'Completed'))));
+    const groups = groupSeasons(await fetchCompleted(2));
+    if (tk !== doneToken) return;
+    if (groups.length) box.appendChild(buildRow('Already Watched', groups.slice(0, 24).map(g => groupCard(g, 'Completed'))));
   } catch (e) { /* ignore */ }
 }
 
@@ -1245,6 +1298,8 @@ if (alToken()) {   // silently re-check a saved token so the badge reflects real
     })
     .catch(e => { if (!(e instanceof TypeError)) { al.status = 'bad'; renderAl(); } });
 }
+$('groupToggle').checked = store.get('anifin.group', true);
+$('groupToggle').onchange = e => { store.set('anifin.group', e.target.checked); loadWatchedRow(); };
 loadHome();
 route();      // honour a deep link like #watch/159042 on first load
 </script>

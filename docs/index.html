@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Anime-X</title>
+<title>Zaku</title>
 <link rel="icon" type="image/x-icon" href="Zaku.ico">
 <link rel="icon" type="image/svg+xml" href="Zaku.svg">
 <style>
@@ -29,7 +29,7 @@
   header::after { content:""; position:absolute; left:0; right:0; bottom:0; height:2px; background:linear-gradient(90deg,var(--main),var(--accent),transparent 70%); }
   .logo { font-size:1.45rem; font-weight:800; letter-spacing:-.5px; margin:0; cursor:pointer; white-space:nowrap; }
   .logo span { color:var(--main-hi); } .logo b { color:var(--accent); }
-  .searchbox { flex:1; max-width:560px; margin-left:auto; position:relative; }
+  .searchbox { flex:1; min-width:160px; max-width:400px; margin-left:auto; position:relative; }
   .searchbox svg { position:absolute; left:14px; top:50%; transform:translateY(-50%); width:18px; height:18px; stroke:var(--muted); fill:none; stroke-width:2; }
   input[type=text], input[type=search], select { width:100%; padding:11px 16px; border-radius:10px; border:1px solid var(--glass-border); background:var(--glass); color:var(--text); font:inherit; font-size:.92rem; transition:border-color .2s, box-shadow .2s, background .2s; }
   input[type=search] { padding-left:42px; border-radius:999px; }
@@ -164,6 +164,65 @@
   .gbtn { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); color:var(--muted); border-radius:999px; padding:5px 13px; font:inherit; font-size:.8rem; font-weight:600; cursor:pointer; transition:all .15s; }
   .gbtn:hover { color:#fff; background:var(--main); border-color:var(--accent); }
   .foot-bottom { border-top:1px solid rgba(255,255,255,.05); padding:20px 0 26px; color:#7d7873; font-size:.8rem; line-height:1.6; }
+  /* ============ Header nav tabs ============ */
+  .nav { display:flex; gap:2px; overflow-x:auto; scrollbar-width:none; min-width:0; }
+  .nav::-webkit-scrollbar { display:none; }
+  .tab { position:relative; background:none; border:none; color:var(--muted); font:inherit; font-weight:600; font-size:.9rem; padding:8px 12px; border-radius:10px; cursor:pointer; white-space:nowrap; transition:color .15s, background .15s; }
+  .tab:hover { color:#fff; background:var(--glass); }
+  .tab.active { color:#fff; }
+  .tab.active::after { content:""; position:absolute; left:12px; right:12px; bottom:1px; height:2px; border-radius:2px; background:linear-gradient(90deg,var(--main),var(--accent)); }
+
+  /* ============ Custom logo ============ */
+  .logo-img { height:34px; width:auto; max-width:220px; display:block; object-fit:contain; }
+  #flogo .logo-img { height:44px; max-width:260px; }
+  .logo-preview { max-height:56px; max-width:100%; object-fit:contain; background:rgba(255,255,255,.04); border-radius:10px; padding:8px; justify-self:start; }
+
+  /* ============ Airing schedule ============ */
+  .sched { display:grid; gap:10px; max-width:920px; }
+  .srow { display:flex; align-items:center; gap:14px; padding:10px 14px; border-radius:12px; background:var(--glass); border:1px solid var(--glass-border); cursor:pointer; transition:border-color .15s, background .15s; }
+  .srow:hover { border-color:var(--accent); background:var(--glass-hi); }
+  .srow .time { min-width:82px; font-weight:800; color:var(--accent); font-variant-numeric:tabular-nums; }
+  .srow.done .time { color:var(--muted); }
+  .srow img { width:46px; height:64px; object-fit:cover; border-radius:8px; background:#111; }
+  .srow .t { flex:1; min-width:0; }
+  .srow .t b { display:block; font-size:.95rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .srow .t small { font-size:.78rem; }
+  .srow .ep { padding:4px 11px; border-radius:999px; font-size:.78rem; font-weight:700; background:rgba(232,163,61,.15); border:1px solid var(--accent); color:var(--accent); white-space:nowrap; }
+
+  /* ============ Watched episodes ============ */
+  .eps button { position:relative; }
+  .eps button.seen { color:var(--muted); background:rgba(255,255,255,.02); }
+  .eps button.seen::after { content:"✓"; position:absolute; top:1px; right:5px; font-size:.62rem; color:#7ee2a0; }
+  .eps button.seen:hover { color:#fff; }
+  .eps button.active::after { color:#fff; }
+  .epstat { margin-left:8px; color:#7ee2a0; text-transform:none; letter-spacing:0; font-weight:700; }
+  .eprow { display:flex; margin-bottom:10px; }
+  .seg.small .btn { padding:5px 12px; font-size:.78rem; }
+  .card small.meta { color:var(--muted); }
+
+  /* ============ Styled dropdowns ============ */
+  select.ddn { display:none; }
+  .dd { position:relative; display:inline-block; min-width:140px; }
+  .dd.block { display:block; width:100%; }
+  .toolbar .dd { min-width:170px; }
+  .dd-btn { width:100%; display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:10px; border:1px solid var(--glass-border); background:var(--glass); color:var(--text); font:inherit; font-size:.9rem; font-weight:600; cursor:pointer; text-align:left; transition:border-color .2s, background .2s; }
+  .dd-btn:hover, .dd.open .dd-btn { border-color:var(--accent); background:var(--glass-hi); }
+  .dd-btn:disabled { opacity:.45; pointer-events:none; }
+  .dd-btn .cur { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .dd-btn::after { content:""; width:7px; height:7px; border-right:2px solid var(--muted); border-bottom:2px solid var(--muted); transform:rotate(45deg) translateY(-2px); transition:transform .2s; }
+  .dd.open .dd-btn::after { transform:rotate(-135deg) translate(-2px,-1px); }
+  .dd-menu { display:none; position:absolute; z-index:30; left:0; top:100%; min-width:100%; max-width:min(92vw,520px); max-height:320px; overflow:auto; margin-top:6px; padding:6px; border-radius:12px; background:rgba(22,22,28,.98); border:1px solid var(--glass-border); box-shadow:0 18px 44px rgba(0,0,0,.65); }
+  .dd.open .dd-menu { display:block; animation:rise .15s ease; }
+  .dd.up .dd-menu { top:auto; bottom:100%; margin:0 0 6px; }
+  .dd-item { display:flex; align-items:center; gap:12px; padding:9px 12px; border-radius:8px; cursor:pointer; font-size:.88rem; white-space:nowrap; }
+  .dd-item:hover { background:var(--glass-hi); }
+  .dd-item.sel { background:rgba(138,26,26,.55); box-shadow:0 0 0 1px var(--accent) inset; }
+  .dd-item .nm { flex:1; overflow:hidden; text-overflow:ellipsis; }
+  .dd-item .bd { font-size:.7rem; font-weight:700; padding:2px 8px; border-radius:999px; background:rgba(255,255,255,.08); color:var(--muted); }
+  .dd-item .bd.done { background:rgba(126,226,160,.12); color:#7ee2a0; }
+  .dd-item .bd.prog { background:rgba(232,163,61,.15); color:var(--accent); }
+
+  @media (max-width:1000px) { header { flex-wrap:wrap; row-gap:4px; } .nav { order:5; flex:0 0 100%; } .searchpage { padding-top:132px; } .wv-hero { padding-top:140px; } .hero { padding-top:150px; } }
   @media (max-width:900px) { .foot-grid { grid-template-columns:repeat(2,1fr); } .foot-brand { grid-column:1/-1; } }
   @media (max-width:520px) { .foot-grid { grid-template-columns:1fr; } #alBadge { display:none; } }
 
@@ -174,6 +233,14 @@
 <header>
   <h1 class="logo" id="logo" style="background: linear-gradient(135deg, var(--main-hi) 20%, var(--accent) 80%); -webkit-background-clip: text; background-clip: text; color: transparent;">Zaku</h1>
   <button class="btn hidden" id="backBtn">&larr; Back to Home</button>
+  <nav class="nav" aria-label="Main">
+    <button class="tab active" data-act="home">Home</button>
+    <button class="tab" data-act="schedule">Schedule</button>
+    <button class="tab" data-act="az">A-Z</button>
+    <button class="tab" data-act="movies">Movies</button>
+    <button class="tab" data-act="airing">Top Airing</button>
+    <button class="tab" data-act="popular">Popular</button>
+  </nav>
   <div class="searchbox">
     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
     <input type="search" id="search" placeholder="Search anime by title…" autocomplete="off">
@@ -207,8 +274,14 @@
         <select id="fSort" title="Sort"><option value="POPULARITY_DESC">Most popular</option><option value="SCORE_DESC">Top rated</option><option value="TRENDING_DESC">Trending</option><option value="START_DATE_DESC">Newest</option><option value="TITLE_ROMAJI">Title A–Z</option></select>
         <input type="number" id="fYear" placeholder="Year" min="1940" max="2100">
       </div>
+      <div class="tabs hidden" id="schedTabs"></div>
       <div class="status" id="searchStatus"></div>
+      <div class="sched hidden" id="schedList"></div>
       <div class="grid" id="searchGrid"></div>
+      <div id="doneSection" class="hidden">
+        <div class="row-head" style="margin-top:34px"><h2>Already Watched</h2></div>
+        <div class="grid" id="doneGrid"></div>
+      </div>
       <div class="loadmore"><button class="btn hidden" id="loadMore">Load more</button></div>
     </div>
   </div>
@@ -265,7 +338,14 @@
           <div class="label">Season / Entry</div>
           <select id="seasonSelect"></select>
         </div>
-        <div class="label">Episodes</div>
+        <div class="label">Episodes <span class="epstat" id="epStat"></span></div>
+        <div class="eprow">
+          <div class="seg small" id="epFilter">
+            <button class="btn active" data-f="all">All</button>
+            <button class="btn" data-f="seen">Watched</button>
+            <button class="btn" data-f="unseen">Unwatched</button>
+          </div>
+        </div>
         <div class="tabs" id="tabs"></div>
         <div class="eps" id="eps"></div>
       </aside>
@@ -321,6 +401,23 @@
   <div class="dialog">
     <h3>Settings</h3>
 
+    <!-- Branding / logo -->
+    <div class="box">
+      <h4>Logo</h4>
+      <small>Replace the text logo with your own image (PNG, JPG, WebP or SVG). It is stored only in this browser.</small>
+      <img id="logoPreview" class="logo-preview hidden" alt="">
+      <div class="row" style="margin:0">
+        <button class="btn" id="logoUpload">Upload image</button>
+        <input type="file" id="logoFile" accept="image/*" class="hidden">
+        <button class="btn hidden" id="logoRemove">Remove logo</button>
+      </div>
+      <div class="row" style="margin:0">
+        <input type="text" id="logoUrl" placeholder="…or paste an image URL">
+        <button class="btn" id="logoUrlBtn">Use URL</button>
+      </div>
+      <div class="err" id="logoErr"></div>
+    </div>
+
     <!-- AniList integration -->
     <div class="box">
       <h4>AniList Integration <span class="albadge" id="alStatus">Not connected</span></h4>
@@ -367,6 +464,9 @@ const store = {
 };
 const uid = () => Math.random().toString(36).slice(2, 10);
 const titleOf = a => a.title.english || a.title.romaji;
+// Cut very long titles off with an ellipsis (the full title stays in the tooltip)
+const clip = (s, n) => s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s;
+const shortTitle = (a, n = 46) => clip(titleOf(a), n);
 const stripHtml = s => (s || 'No description.').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 const score = a => a.averageScore ? (a.averageScore / 10).toFixed(1) : null;
 const episodeCount = a => a.episodes || (a.nextAiringEpisode ? a.nextAiringEpisode.episode - 1 : 0);
@@ -432,7 +532,7 @@ const getProvider = () => providers.find(p => p.id === providerId);
 const saveProviders = () => { store.set('anifin.providers', providers); store.set('anifin.provider', providerId); };
 
 /* ============ State ============ */
-const state = { anime: null, chain: [], ep: null, count: 0, tab: 0, lang: 'sub', mode: 'embed' };
+const state = { anime: null, chain: [], ep: null, count: 0, tab: 0, epFilter: 'all', lang: 'sub', mode: 'embed' };
 const BATCH = 100;               // episodes per pagination tab
 let routeToken = 0;
 
@@ -442,7 +542,7 @@ const seasonLabel = () => state.chain.length > 1 ? titleOf(state.anime) : '';
 function saveProgress() {
   if (!state.anime || !state.ep) return;
   const a = state.anime, root = state.chain[0] || a;
-  const entry = { animeId: a.id, title: titleOf(root), poster: a.coverImage.large, episode: state.ep, seasonTitle: seasonLabel(), timestamp: Date.now(), provider: providerId };
+  const entry = { animeId: a.id, title: titleOf(root), poster: a.coverImage.large, episode: state.ep, seasonTitle: seasonLabel(), year: a.seasonYear || null, timestamp: Date.now(), provider: providerId };
   store.set('anifin.history', [entry, ...getHistory().filter(h => h.animeId !== a.id)].slice(0, 30));
 }
 function resume(h) {
@@ -455,8 +555,10 @@ function makeCard(a, onClick, extra) {
   const c = el('div', 'card');
   const img = el('img'); img.loading = 'lazy'; img.alt = ''; img.src = a.coverImage.large; c.appendChild(img);
   if (score(a)) c.appendChild(el('span', 'badge', '★ ' + score(a)));
-  c.appendChild(el('p', '', titleOf(a)));
-  if (extra) c.appendChild(el('small', '', extra));
+  const p = el('p', '', shortTitle(a)); p.title = titleOf(a); c.appendChild(p);
+  // Meta line under the (shortened) title: custom text if given, otherwise release year • format
+  const meta = extra || [a.seasonYear, a.format && a.format.replace('_', ' ')].filter(Boolean).join(' • ');
+  if (meta) c.appendChild(el('small', extra ? '' : 'meta', meta));
   c.onclick = onClick;
   return c;
 }
@@ -477,7 +579,7 @@ function renderContinue() {
   box.innerHTML = ''; box.classList.toggle('hidden', !hist.length);
   if (!hist.length) return;
   box.appendChild(buildRow('Continue Watching', hist.map(h => {
-    const extra = (h.seasonTitle && h.seasonTitle !== h.title ? h.seasonTitle + ' • ' : '') + 'Episode ' + h.episode;
+    const extra = histExtra(h);
     const c = makeCard({ title: { romaji: h.title }, coverImage: { large: h.poster } }, () => resume(h), extra);
     const rm = el('button', 'rm', '×'); rm.title = 'Remove';
     rm.onclick = e => { e.stopPropagation(); store.set('anifin.history', getHistory().filter(x => x.animeId !== h.animeId)); renderContinue(); };
@@ -489,7 +591,7 @@ let heroItems = [], heroIdx = 0, heroTimer;
 function showHero(i) {
   heroIdx = i; const a = heroItems[i]; if (!a) return;
   $('heroBg').style.backgroundImage = `url("${a.bannerImage || a.coverImage.extraLarge || a.coverImage.large}")`;
-  $('heroTitle').textContent = titleOf(a); $('heroDesc').textContent = stripHtml(a.description);
+  $('heroTitle').textContent = clip(titleOf(a), 70); $('heroDesc').textContent = stripHtml(a.description);
   const t = $('heroTags'); t.innerHTML = '';
   if (score(a)) t.appendChild(el('span', 'tag score', '★ ' + score(a)));
   t.appendChild(el('span', 'tag hot', 'Trending #' + (i + 1)));
@@ -510,6 +612,7 @@ $('heroWatch').onclick = () => heroItems[heroIdx] && goWatch(heroItems[heroIdx].
 async function loadHome() {
   const rows = $('rows'); rows.innerHTML = '';
   const cont = el('div'); cont.id = 'contRow'; rows.appendChild(cont); renderContinue();
+  const done = el('div'); done.id = 'doneRow'; rows.appendChild(done); loadWatchedRow();
   const defs = [['Trending Now', qTrending], ['Popular This Season', qSeason], ['Top Rated', qTop]];
   const holders = defs.map(([t]) => { const h = el('div'); h.appendChild(el('div', 'status', 'Loading ' + t + '…')); rows.appendChild(h); return h; });
   await Promise.all(defs.map(async ([title, fn], i) => {
@@ -528,11 +631,12 @@ let timer;
 $('search').addEventListener('input', e => {
   clearTimeout(timer);
   const q = e.target.value.trim();
-  if (!q) { $('searchPage').classList.add('hidden'); $('home').classList.remove('hidden'); renderContinue(); return; }
+  if (!q) { $('searchPage').classList.add('hidden'); $('home').classList.remove('hidden'); renderContinue(); setTab('home'); return; }
   if (location.hash.startsWith('#watch')) location.hash = '#home';
   timer = setTimeout(async () => {
     $('home').classList.add('hidden'); $('searchPage').classList.remove('hidden');
-    $('filterBar').classList.add('hidden'); $('loadMore').classList.add('hidden'); listState.token++;
+    $('filterBar').classList.add('hidden'); $('loadMore').classList.add('hidden'); listState.token++; setTab('');
+    $('schedTabs').classList.add('hidden'); $('schedList').classList.add('hidden'); $('doneSection').classList.add('hidden');
     $('searchTitle').textContent = `Results for "${q}"`; $('searchStatus').textContent = 'Loading…'; $('searchGrid').innerHTML = '';
     try {
       const list = await qSearch(q);
@@ -580,12 +684,12 @@ async function loadWatch(id, startEp) {
   state.anime = a; state.count = episodeCount(a); state.tab = 0;
   renderWatchHero(a);
   document.title = titleOf(a) + ' – Zaku';
-  renderEpisodes(); updateNav();
+  renderEpisodes(); updateNav(); refreshAlEntries([id]);
 
   // Season chain: reuse it if this entry is already part of it, otherwise (re)build
   if (!state.chain.some(x => x.id === id)) {
     state.chain = [a]; renderSeasons();
-    try { const chain = await buildChain(a); if (token !== routeToken) return; state.chain = chain; renderSeasons(); }
+    try { const chain = await buildChain(a); if (token !== routeToken) return; state.chain = chain; renderSeasons(); refreshAlEntries(chain.map(x => x.id)); }
     catch (e) { /* relations are optional – keep single entry */ }
   } else renderSeasons();
 
@@ -595,7 +699,7 @@ async function loadWatch(id, startEp) {
 function renderWatchHero(a) {
   $('wvBg').style.backgroundImage = `url("${a.bannerImage || a.coverImage.extraLarge || a.coverImage.large}")`;
   $('mPoster').src = a.coverImage.extraLarge || a.coverImage.large;
-  $('mTitle').textContent = titleOf(a);
+  $('mTitle').textContent = clip(titleOf(a), 90); $('mTitle').title = titleOf(a);
   const d = $('mDesc'); d.textContent = stripHtml(a.description); d.classList.remove('open');
   $('mMeta').innerHTML = '';
   if (score(a)) tag('★ ' + score(a), 'score');
@@ -613,37 +717,52 @@ function renderSeasons() {
   const sel = $('seasonSelect'); sel.innerHTML = '';
   $('seasonBox').classList.toggle('hidden', state.chain.length < 2);
   state.chain.forEach((m, i) => {
-    const o = new Option(`${i + 1}. ${titleOf(m)} (${m.format?.replace('_', ' ') || '?'}${m.seasonYear ? ', ' + m.seasonYear : ''})`, m.id);
+    const o = new Option(`${i + 1}. ${clip(titleOf(m), 34)} (${m.format?.replace('_', ' ') || '?'}${m.seasonYear ? ', ' + m.seasonYear : ''})`, m.id);
+    const w = watchedSet(m), total = episodeCount(m) || m.episodes || 0;   // watched badge in the dropdown
+    if (total && w.size >= total) { o.dataset.badge = '✓ Watched'; o.dataset.badgeCls = 'done'; }
+    else if (w.size) { o.dataset.badge = `${w.size}/${total || '?'}`; o.dataset.badgeCls = 'prog'; }
     sel.appendChild(o);
   });
   sel.value = state.anime?.id;
+  refreshSelect(sel);
 }
 // Switching entries updates the hash, which re-renders the title, ID, episode count and grid
 $('seasonSelect').onchange = e => goWatch(+e.target.value, 1);
 
-/* Episode grid with batch tabs (1-100, 101-200, …) */
+/* Episode grid: watched styling, All/Watched/Unwatched filter, batch tabs (1-100, 101-200, …) */
 function renderEpisodes() {
   const n = state.count, tabs = $('tabs'), grid = $('eps');
   tabs.innerHTML = ''; grid.innerHTML = '';
-  if (!n) { grid.textContent = 'No episode count available.'; return; }
-  const batches = Math.ceil(n / BATCH);
-  if (batches > 1) for (let t = 0; t < batches; t++) {
-    const lo = t * BATCH + 1, hi = Math.min(n, (t + 1) * BATCH);
-    const b = el('button', t === state.tab ? 'active' : '', `${lo}-${hi}`);
-    b.onclick = () => { state.tab = t; renderEpisodes(); };
-    tabs.appendChild(b);
-  }
-  const lo = state.tab * BATCH + 1, hi = Math.min(n, (state.tab + 1) * BATCH);
-  for (let i = lo; i <= hi; i++) {
-    const b = el('button', i === state.ep ? 'active' : '', i);
+  if (!n) { grid.textContent = 'No episode count available.'; $('epStat').textContent = ''; return; }
+  const seen = state.anime ? watchedSet(state.anime) : new Set();
+  let done = 0; for (let i = 1; i <= n; i++) if (seen.has(i)) done++;
+  $('epStat').textContent = done ? `${done}/${n} watched` : '';
+  const f = state.epFilter;
+  document.querySelectorAll('#epFilter .btn').forEach(b => b.classList.toggle('active', b.dataset.f === f));
+  const list = [];
+  if (f === 'all') {
+    const batches = Math.ceil(n / BATCH);
+    if (batches > 1) for (let t = 0; t < batches; t++) {
+      const lo = t * BATCH + 1, hi = Math.min(n, (t + 1) * BATCH);
+      const b = el('button', t === state.tab ? 'active' : '', `${lo}-${hi}`);
+      b.onclick = () => { state.tab = t; renderEpisodes(); };
+      tabs.appendChild(b);
+    }
+    for (let i = state.tab * BATCH + 1; i <= Math.min(n, (state.tab + 1) * BATCH); i++) list.push(i);
+  } else for (let i = 1; i <= n; i++) if ((f === 'seen') === seen.has(i)) list.push(i);
+  if (!list.length) grid.textContent = f === 'seen' ? 'Nothing watched yet.' : 'All caught up!';
+  list.forEach(i => {
+    const b = el('button', ((i === state.ep ? 'active ' : '') + (seen.has(i) ? 'seen' : '')).trim(), i);
     b.onclick = () => selectEpisode(i);
     grid.appendChild(b);
-  }
+  });
 }
+document.querySelectorAll('#epFilter .btn').forEach(b => b.onclick = () => { state.epFilter = b.dataset.f; renderEpisodes(); });
 
 function selectEpisode(n) {
   if (!state.anime || n < 1 || n > state.count) return;
   state.ep = n; state.tab = Math.floor((n - 1) / BATCH);
+  markWatched(state.anime.id, n);
   renderEpisodes(); updateNav(); playEmbed(); saveProgress(); syncAniList(state.anime, n);
   history.replaceState(null, '', `#watch/${state.anime.id}/${n}`);   // shareable/reload-safe, no re-route
 }
@@ -660,10 +779,11 @@ $('nextBtn').onclick = () => selectEpisode(state.ep + 1);
 /* ============ Embed player (provider-driven) ============ */
 function renderProvSelect() {
   const s = $('provSelect'); s.innerHTML = '';
-  if (!providers.length) { s.appendChild(new Option('No providers – add one', '')); s.disabled = true; return; }
+  if (!providers.length) { s.appendChild(new Option('No providers – add one', '')); s.disabled = true; refreshSelect(s); return; }
   s.disabled = false;
   providers.forEach(p => s.appendChild(new Option(p.name + (p.idType === 'mal' ? ' (MAL)' : ''), p.id)));
   s.value = providerId;
+  refreshSelect(s);
 }
 $('provSelect').onchange = e => { providerId = e.target.value; saveProviders(); updateNav(); playEmbed(); saveProgress(); };
 
@@ -726,10 +846,13 @@ let editingId = null;
 const openSettings = () => { renderProvList(); renderAl(); $('settings').classList.add('open'); };
 const closeSettings = () => { resetForm(); $('settings').classList.remove('open'); };
 $('openSettings').onclick = openSettings; $('manageProv').onclick = openSettings; $('pClose').onclick = closeSettings;
-$('settings').addEventListener('click', e => { if (e.target === $('settings')) closeSettings(); });
+// Close only when a press STARTS on the backdrop. Using mousedown (not click) means that
+// selecting text and releasing over the backdrop no longer closes the dialog.
+// The clientX check ignores presses on the overlay's own scrollbar.
+$('settings').addEventListener('mousedown', e => { if (e.target === $('settings') && e.clientX < $('settings').clientWidth) closeSettings(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('settings').classList.contains('open')) closeSettings(); });
 
-function resetForm() { editingId = null; $('pName').value = ''; $('pTpl').value = ''; $('pType').value = 'anilist'; $('pErr').textContent = ''; $('pSave').textContent = 'Add provider'; $('pCancel').classList.add('hidden'); }
+function resetForm() { editingId = null; $('pName').value = ''; $('pTpl').value = ''; $('pType').value = 'anilist'; refreshSelect($('pType')); $('pErr').textContent = ''; $('pSave').textContent = 'Add provider'; $('pCancel').classList.add('hidden'); }
 $('pCancel').onclick = resetForm;
 
 function renderProvList() {
@@ -740,7 +863,7 @@ function renderProvList() {
     info.appendChild(el('b', '', p.name));
     info.appendChild(el('small', '', (p.idType === 'mal' ? 'MyAnimeList ID' : 'AniList ID') + ' • ' + p.template));
     const edit = el('button', 'btn', 'Edit'), del = el('button', 'btn', 'Delete');
-    edit.onclick = () => { editingId = p.id; $('pName').value = p.name; $('pType').value = p.idType; $('pTpl').value = p.template; $('pSave').textContent = 'Save changes'; $('pCancel').classList.remove('hidden'); $('pErr').textContent = ''; };
+    edit.onclick = () => { editingId = p.id; $('pName').value = p.name; $('pType').value = p.idType; refreshSelect($('pType')); $('pTpl').value = p.template; $('pSave').textContent = 'Save changes'; $('pCancel').classList.remove('hidden'); $('pErr').textContent = ''; };
     del.onclick = () => {
       if (!confirm(`Delete "${p.name}"?`)) return;
       providers = providers.filter(x => x.id !== p.id);
@@ -778,7 +901,7 @@ function toast(msg, kind) {
 /* ============ AniList integration (token + progress sync) ============ */
 const AL_KEY = 'anilist_token', AL_USER = 'anilist_user';
 const alToken = () => localStorage.getItem(AL_KEY) || '';
-const al = { status: alToken() ? 'ok' : 'off', name: localStorage.getItem(AL_USER) || '' };
+const al = { status: alToken() ? 'ok' : 'off', name: localStorage.getItem(AL_USER) || '', id: +localStorage.getItem('anilist_uid') || 0 };
 const SAVE_MUTATION = `mutation($mediaId:Int,$progress:Int,$status:MediaListStatus){
   SaveMediaListEntry(mediaId:$mediaId, progress:$progress, status:$status) { id progress status } }`;
 
@@ -800,15 +923,18 @@ async function connectAl() {
   $('alErr').textContent = 'Checking…';
   try {
     const { Viewer } = await gql('query{ Viewer { id name } }', {}, token);
-    localStorage.setItem(AL_KEY, token); localStorage.setItem(AL_USER, Viewer.name);
-    Object.assign(al, { status: 'ok', name: Viewer.name });
+    localStorage.setItem(AL_KEY, token); localStorage.setItem(AL_USER, Viewer.name); localStorage.setItem('anilist_uid', Viewer.id);
+    Object.assign(al, { status: 'ok', name: Viewer.name, id: Viewer.id });
     $('alTokenInput').value = ''; $('alErr').textContent = '';
     renderAl(); toast('Connected to AniList as ' + Viewer.name);
+    loadWatchedRow(); if (state.anime) refreshAlEntries((state.chain.length ? state.chain : [state.anime]).map(x => x.id));
   } catch (e) { $('alErr').textContent = 'Could not verify token: ' + e.message; }
 }
 function disconnectAl() {
-  localStorage.removeItem(AL_KEY); localStorage.removeItem(AL_USER);
-  Object.assign(al, { status: 'off', name: '' }); lastSynced = ''; renderAl(); toast('Disconnected from AniList');
+  localStorage.removeItem(AL_KEY); localStorage.removeItem(AL_USER); localStorage.removeItem('anilist_uid');
+  Object.assign(al, { status: 'off', name: '', id: 0 }); lastSynced = ''; alEntries.clear(); renderAl(); loadWatchedRow();
+  if (state.anime) { renderEpisodes(); renderSeasons(); }
+  toast('Disconnected from AniList');
 }
 $('alConnect').onclick = connectAl; $('alDisconnect').onclick = disconnectAl;
 $('alTokenInput').addEventListener('keydown', e => { if (e.key === 'Enter') connectAl(); });
@@ -826,6 +952,7 @@ function syncAniList(a, ep) {
     try {
       await gql(SAVE_MUTATION, { mediaId: a.id, progress: ep, status: 'CURRENT' }, token);
       lastSynced = key; toast(`Synced Ep ${ep} to AniList!`);
+      alEntries.set(a.id, { progress: ep, status: 'CURRENT' }); if (state.anime && state.anime.id === a.id) { renderEpisodes(); renderSeasons(); }
     } catch (e) {
       if (isAuthError(e)) { al.status = 'bad'; renderAl(); }
       toast('AniList sync failed: ' + e.message, 'err');
@@ -847,6 +974,8 @@ function prepareList(title, filters) {
   $('filterBar').classList.toggle('hidden', !filters);
   $('searchTitle').textContent = title; $('searchStatus').textContent = ''; $('searchGrid').innerHTML = '';
   $('loadMore').classList.add('hidden');
+  $('schedTabs').classList.add('hidden'); $('schedList').classList.add('hidden'); $('schedList').innerHTML = '';
+  $('doneSection').classList.add('hidden'); $('doneGrid').innerHTML = '';
   window.scrollTo({ top: 0, behavior: 'smooth' });
   return ++listState.token;
 }
@@ -888,9 +1017,20 @@ function showMyList() {
   const hist = getHistory();
   $('searchStatus').textContent = hist.length ? '' : 'Nothing here yet. Episodes you watch are saved automatically.';
   hist.forEach(h => {
-    const extra = (h.seasonTitle && h.seasonTitle !== h.title ? h.seasonTitle + ' • ' : '') + 'Episode ' + h.episode;
+    const extra = histExtra(h);
     $('searchGrid').appendChild(makeCard({ title: { romaji: h.title }, coverImage: { large: h.poster } }, () => resume(h), extra));
   });
+  // "Already Watched" section: your completed list from AniList
+  if (alToken() && al.id) {
+    const tk = listState.token, grid = $('doneGrid');
+    $('doneSection').classList.remove('hidden'); grid.appendChild(el('div', 'status', 'Loading…'));
+    fetchCompleted(36).then(list => {
+      if (tk !== listState.token) return;
+      grid.innerHTML = '';
+      if (!list.length) grid.appendChild(el('div', 'status', 'No completed anime on your AniList yet.'));
+      list.forEach(a => grid.appendChild(makeCard(a, () => goWatch(a.id), 'Completed')));
+    }).catch(e => { if (tk === listState.token) grid.textContent = 'Failed to load: ' + e.message; });
+  }
 }
 
 // Random Pick: random entry from the high-rated, well-known pool
@@ -912,25 +1052,197 @@ const POP = 'sort: POPULARITY_DESC';
 const ACTIONS = {
   all:       () => openList('All Series', 'format_in: [TV, TV_SHORT], ' + POP),
   movies:    () => openList('Movies', 'format: MOVIE, ' + POP),
-  browse:    () => { ['fFormat', 'fGenre', 'fStatus', 'fYear'].forEach(id => $(id).value = ''); $('fSort').value = 'POPULARITY_DESC'; openList('Browse', filterArgs(), true); },
+  browse:    () => { ['fFormat', 'fGenre', 'fStatus', 'fYear'].forEach(id => $(id).value = ''); $('fSort').value = 'POPULARITY_DESC'; ['fFormat', 'fGenre', 'fStatus', 'fSort'].forEach(id => refreshSelect($(id))); openList('Browse', filterArgs(), true); },
   airing:    () => openList('Top Airing', 'status: RELEASING, ' + POP),
   popular:   () => openList('Most Popular', POP),
   completed: () => openList('Completed', 'status: FINISHED, ' + POP),
   random:    randomPick,
   mylist:    showMyList,
-  az:        () => openList('A-Z Index', 'sort: TITLE_ROMAJI')
+  az:        () => openList('A-Z Index', 'sort: TITLE_ROMAJI'),
+  schedule:  showSchedule,
+  home:      () => { $('search').value = ''; listState.token++; $('searchPage').classList.add('hidden'); $('home').classList.remove('hidden'); showView('home'); if (location.hash !== '#home') location.hash = '#home'; renderContinue(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 };
-document.querySelectorAll('[data-act]').forEach(b => b.onclick = ACTIONS[b.dataset.act]);
+document.querySelectorAll('[data-act]').forEach(b => b.onclick = () => { ACTIONS[b.dataset.act](); setTab(b.dataset.act); });
 document.querySelectorAll('[data-genre]').forEach(b => b.onclick = () => openList(b.dataset.genre, `genre: ${JSON.stringify(b.dataset.genre)}, ${POP}`));
 document.querySelectorAll('[data-tag]').forEach(b => b.onclick = () => openList(b.dataset.tag, `tag: ${JSON.stringify(b.dataset.tag)}, ${POP}`));   // Isekai is an AniList tag, not a genre
+/* ============ Watched episodes (site history + AniList progress) ============ */
+const alEntries = new Map();     // AniList list entries: mediaId -> { progress, status }
+const histExtra = h => [h.seasonTitle && h.seasonTitle !== h.title ? clip(h.seasonTitle, 24) : '', 'Episode ' + h.episode, h.year || ''].filter(Boolean).join(' • ');
+function markWatched(id, ep) {
+  const all = store.get('anifin.watched', {}), arr = all[id] || [];
+  if (!arr.includes(ep)) { arr.push(ep); all[id] = arr; store.set('anifin.watched', all); }
+}
+// Watched = episodes you opened here ∪ 1..progress on AniList (everything if COMPLETED)
+function watchedSet(m) {
+  const s = new Set(store.get('anifin.watched', {})[m.id] || []);
+  const e = alEntries.get(m.id);
+  if (e) { const upto = e.status === 'COMPLETED' ? (episodeCount(m) || e.progress) : e.progress; for (let i = 1; i <= upto; i++) s.add(i); }
+  return s;
+}
+async function refreshAlEntries(ids) {
+  if (!alToken() || !al.id || !ids.length) return;
+  try {
+    const d = await gql(`query($u:Int,$ids:[Int]){ Page(perPage:50){ mediaList(userId:$u, mediaId_in:$ids, type:ANIME){ mediaId progress status } } }`, { u: al.id, ids }, alToken());
+    d.Page.mediaList.forEach(e => alEntries.set(e.mediaId, { progress: e.progress, status: e.status }));
+    if (state.anime) { renderEpisodes(); renderSeasons(); }
+  } catch (e) { /* optional – local history still works */ }
+}
+async function fetchCompleted(per) {
+  const d = await gql(`query($u:Int,$n:Int){ Page(perPage:$n){ mediaList(userId:$u, type:ANIME, status:COMPLETED, sort:UPDATED_TIME_DESC){ media { ${F} } } } }`, { u: al.id, n: per }, alToken());
+  const list = d.Page.mediaList.map(e => e.media).filter(Boolean);
+  list.forEach(a => mediaCache.set(a.id, a));
+  return list;
+}
+// Home row: "Already Watched" (only when AniList is connected and has completed shows)
+async function loadWatchedRow() {
+  const box = $('doneRow'); if (!box) return;
+  box.innerHTML = '';
+  if (!alToken() || !al.id) return;
+  try {
+    const list = await fetchCompleted(24);
+    if (list.length) box.appendChild(buildRow('Already Watched', list.map(a => makeCard(a, () => goWatch(a.id), 'Completed'))));
+  } catch (e) { /* ignore */ }
+}
+
+/* ============ Styled dropdowns (wrap native <select>, keep its value/change events) ============ */
+const ddMap = new Map();
+const refreshSelect = sel => ddMap.get(sel)?.refresh();
+function closeAllDd() { document.querySelectorAll('.dd.open').forEach(d => d.classList.remove('open')); }
+function enhanceSelect(sel, opts = {}) {
+  const wrap = el('div', 'dd' + (opts.block ? ' block' : '')), btn = el('button', 'dd-btn'), cur = el('span', 'cur'), menu = el('div', 'dd-menu');
+  btn.type = 'button'; btn.appendChild(cur);
+  sel.classList.add('ddn'); sel.parentNode.insertBefore(wrap, sel); wrap.append(btn, menu, sel);
+  const dd = {
+    refresh() {
+      menu.innerHTML = ''; let last = null;
+      [...sel.options].forEach(o => {
+        if (o.dataset.group && o.dataset.group !== last) { menu.appendChild(el('div', 'dd-head', o.dataset.group)); last = o.dataset.group; }
+        const it = el('div', 'dd-item' + (o.value === sel.value ? ' sel' : ''));
+        it.appendChild(el('span', 'nm', o.textContent)); it.title = o.textContent;
+        if (o.dataset.badge) it.appendChild(el('span', 'bd ' + (o.dataset.badgeCls || ''), o.dataset.badge));
+        it.onclick = () => { wrap.classList.remove('open'); if (sel.value !== o.value) { sel.value = o.value; sel.dispatchEvent(new Event('change', { bubbles: true })); } dd.refresh(); };
+        menu.appendChild(it);
+      });
+      cur.textContent = sel.selectedOptions[0]?.textContent || '';
+      btn.disabled = sel.disabled;
+    }
+  };
+  btn.onclick = () => {
+    const open = !wrap.classList.contains('open'); closeAllDd();
+    if (open) { const r = btn.getBoundingClientRect(); wrap.classList.toggle('up', innerHeight - r.bottom < 340 && r.top > 340); wrap.classList.add('open'); }
+  };
+  ddMap.set(sel, dd); dd.refresh();
+}
+document.addEventListener('mousedown', e => { if (!e.target.closest('.dd')) closeAllDd(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAllDd(); });
+
+/* ============ Header tabs ============ */
+function setTab(name) { document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.act === name)); }
+$('logo').onclick = () => { ACTIONS.home(); setTab('home'); };
 $('flogo').onclick = () => $('logo').onclick();
 
+/* ============ Airing schedule (AniList airingSchedules) ============ */
+const schedState = { day: 0, token: 0, listToken: 0 };
+function showSchedule() {
+  schedState.listToken = prepareList('Airing Schedule', false);
+  schedState.day = 0;
+  $('schedTabs').classList.remove('hidden'); $('schedList').classList.remove('hidden');
+  buildSchedTabs(); loadSchedule();
+}
+function buildSchedTabs() {
+  const box = $('schedTabs'); box.innerHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(); d.setDate(d.getDate() + i);
+    const label = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+    const b = el('button', i === schedState.day ? 'active' : '', label);
+    b.onclick = () => { schedState.day = i; buildSchedTabs(); loadSchedule(); };
+    box.appendChild(b);
+  }
+}
+async function loadSchedule() {
+  const tk = ++schedState.token, list = $('schedList'), stale = () => tk !== schedState.token || schedState.listToken !== listState.token;
+  list.innerHTML = ''; $('searchStatus').textContent = 'Loading schedule…';
+  const start = new Date(); start.setHours(0, 0, 0, 0); start.setDate(start.getDate() + schedState.day);
+  const end = new Date(start); end.setDate(end.getDate() + 1);
+  const from = Math.floor(start / 1000) - 1, to = Math.floor(end / 1000), items = [];
+  try {
+    for (let p = 1; p <= 6; p++) {
+      const d = await gql(`query($p:Int,$from:Int,$to:Int){ Page(page:$p, perPage:50){ pageInfo{ hasNextPage }
+        airingSchedules(airingAt_greater:$from, airingAt_lesser:$to, sort:TIME){ airingAt episode
+          media{ id isAdult title{romaji english} coverImage{large} format seasonYear averageScore } } } }`, { p, from, to });
+      if (stale()) return;
+      items.push(...d.Page.airingSchedules);
+      if (!d.Page.pageInfo.hasNextPage) break;
+    }
+  } catch (e) { if (!stale()) $('searchStatus').textContent = 'Failed to load schedule: ' + e.message; return; }
+  const shown = items.filter(x => x.media && !x.media.isAdult);
+  $('searchStatus').textContent = shown.length ? '' : 'Nothing scheduled for this day.';
+  shown.forEach(x => {
+    const m = x.media, row = el('div', 'srow' + (x.airingAt * 1000 < Date.now() ? ' done' : ''));
+    row.appendChild(el('span', 'time', new Date(x.airingAt * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })));
+    const img = el('img'); img.loading = 'lazy'; img.alt = ''; img.src = m.coverImage.large; row.appendChild(img);
+    const t = el('div', 't'), b = el('b', '', shortTitle(m, 56)); b.title = titleOf(m); t.appendChild(b);
+    t.appendChild(el('small', '', [m.format && m.format.replace('_', ' '), m.seasonYear, score(m) && '★ ' + score(m)].filter(Boolean).join(' • ')));
+    row.append(t, el('span', 'ep', 'Ep ' + x.episode));
+    row.onclick = () => goWatch(m.id);
+    list.appendChild(row);
+  });
+}
+
+/* ============ Custom logo (replaces the text logo) ============ */
+const LOGO_KEY = 'anifin.logo', logoDefault = $('logo').innerHTML;
+function applyLogo() {
+  const src = localStorage.getItem(LOGO_KEY);
+  [$('logo'), $('flogo')].forEach(h => {
+    h.innerHTML = logoDefault;
+    if (!src) return;
+    const img = el('img', 'logo-img'); img.alt = 'Zaku'; img.src = src;
+    img.onerror = () => { h.innerHTML = logoDefault; };       // broken URL → fall back to text
+    h.innerHTML = ''; h.appendChild(img);
+  });
+  $('logoPreview').classList.toggle('hidden', !src); if (src) $('logoPreview').src = src;
+  $('logoRemove').classList.toggle('hidden', !src);
+}
+function saveLogo(src) {
+  try { localStorage.setItem(LOGO_KEY, src); $('logoErr').textContent = ''; applyLogo(); }
+  catch { $('logoErr').textContent = 'That image is too large to store. Try a smaller one.'; }
+}
+$('logoUpload').onclick = () => $('logoFile').click();
+$('logoFile').onchange = e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  if (f.size > 5 * 1024 * 1024) return $('logoErr').textContent = 'Image is over 5 MB.';
+  if (f.type === 'image/svg+xml') { const r = new FileReader(); r.onload = () => saveLogo(r.result); r.readAsDataURL(f); return; }
+  const url = URL.createObjectURL(f), img = new Image();       // rasters are downscaled to keep storage small
+  img.onload = () => {
+    const k = Math.min(1, 120 / img.height, 480 / img.width), c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(img.width * k)); c.height = Math.max(1, Math.round(img.height * k));
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    URL.revokeObjectURL(url); saveLogo(c.toDataURL('image/png'));
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); $('logoErr').textContent = 'Could not read that image.'; };
+  img.src = url;
+};
+$('logoUrlBtn').onclick = () => {
+  const u = $('logoUrl').value.trim();
+  if (!/^https?:\/\//i.test(u)) return $('logoErr').textContent = 'URL must start with http:// or https://';
+  saveLogo(u); $('logoUrl').value = '';
+};
+$('logoRemove').onclick = () => { localStorage.removeItem(LOGO_KEY); applyLogo(); };
+
 /* ============ Init ============ */
+['provSelect', 'fFormat', 'fGenre', 'fStatus', 'fSort'].forEach(id => enhanceSelect($(id)));
+enhanceSelect($('pType'), { block: true });
+enhanceSelect($('seasonSelect'), { block: true });
 renderProvSelect();
 renderAl();
+applyLogo();
 if (alToken()) {   // silently re-check a saved token so the badge reflects reality
-  gql('query{ Viewer { name } }', {}, alToken())
-    .then(d => { Object.assign(al, { status: 'ok', name: d.Viewer.name }); localStorage.setItem(AL_USER, d.Viewer.name); renderAl(); })
+  gql('query{ Viewer { id name } }', {}, alToken())
+    .then(d => {
+      Object.assign(al, { status: 'ok', name: d.Viewer.name, id: d.Viewer.id });
+      localStorage.setItem(AL_USER, d.Viewer.name); localStorage.setItem('anilist_uid', d.Viewer.id);
+      renderAl(); loadWatchedRow(); if (state.anime) refreshAlEntries([state.anime.id]);
+    })
     .catch(e => { if (!(e instanceof TypeError)) { al.status = 'bad'; renderAl(); } });
 }
 loadHome();

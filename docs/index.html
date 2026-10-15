@@ -164,6 +164,7 @@
   .gbtn { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); color:var(--muted); border-radius:999px; padding:5px 13px; font:inherit; font-size:.8rem; font-weight:600; cursor:pointer; transition:all .15s; }
   .gbtn:hover { color:#fff; background:var(--main); border-color:var(--accent); }
   .foot-bottom { border-top:1px solid rgba(255,255,255,.05); padding:20px 0 26px; color:#7d7873; font-size:.8rem; line-height:1.6; }
+  .gradient-text { background: linear-gradient(90deg, #ff4b4b, #4158d0); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
   /* ============ Header nav tabs ============ */
   .nav { display:flex; gap:2px; overflow-x:auto; scrollbar-width:none; min-width:0; }
   .nav::-webkit-scrollbar { display:none; }
@@ -373,7 +374,7 @@
 <footer class="site-footer">
   <div class="foot-grid">
     <div class="foot-brand">
-      <h2 class="logo" id="flogo" style="background: linear-gradient(135deg, var(--main-hi) 20%, var(--accent) 80%); -webkit-background-clip: text; background-clip: text; color: transparent;">Zaku</h2>
+      <h2 id="flogo" class="logo"> <span class="gradient-text">Zaku</span> </h2>
       <p>Zaku keeps anime easy: seamless search, automatic season chaining, and self-hosted watch tracking.</p>
     </div>
     <nav class="foot-col" aria-label="Watch">

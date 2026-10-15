@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Zaku</title>
+<title>Anime-X</title>
 <link rel="icon" type="image/x-icon" href="Zaku.ico">
 <link rel="icon" type="image/svg+xml" href="Zaku.svg">
 <style>
@@ -227,6 +227,17 @@
   .dd-item .bd.done { background:rgba(126,226,160,.12); color:#7ee2a0; }
   .dd-item .bd.prog { background:rgba(232,163,61,.15); color:var(--accent); }
 
+  /* ============ Ad-blocker banner ============ */
+  .adbanner { position:fixed; left:50%; bottom:18px; transform:translateX(-50%); z-index:40; width:min(960px,calc(100vw - 28px)); display:flex; align-items:center; gap:14px; padding:14px 16px; border-radius:16px;
+    background:rgba(24,24,30,.94); border:1px solid var(--accent); box-shadow:0 18px 50px rgba(0,0,0,.65); backdrop-filter:var(--blur); -webkit-backdrop-filter:var(--blur); animation:rise .3s ease; }
+  .adbanner .shield { font-size:1.6rem; }
+  .adbanner p { margin:0; flex:1; font-size:.88rem; line-height:1.5; color:#ddd6d0; }
+  .adbanner a { color:var(--accent); font-weight:700; }
+  .adx { background:none; border:none; color:var(--muted); font-size:1.5rem; line-height:1; cursor:pointer; padding:0 4px; }
+  .adx:hover { color:#fff; }
+  body.has-banner #toasts { bottom:110px; }
+  @media (max-width:600px) { .adbanner { flex-wrap:wrap; } .adbanner p { flex:1 1 100%; } }
+
   @media (max-width:1000px) { header { flex-wrap:wrap; row-gap:4px; } .nav { order:5; flex:0 0 100%; } .searchpage { padding-top:132px; } .wv-hero { padding-top:140px; } .hero { padding-top:150px; } }
   @media (max-width:900px) { .foot-grid { grid-template-columns:repeat(2,1fr); } .foot-brand { grid-column:1/-1; } }
   @media (max-width:520px) { .foot-grid { grid-template-columns:1fr; } #alBadge { display:none; } }
@@ -398,6 +409,14 @@
     Zaku does not host any video content. All streams are routed via user-configured embed templates and client-side web requests. &copy; 2026 Zaku
   </div>
 </footer>
+
+<!-- Ad-blocker recommendation (shown only when no blocker is detected) -->
+<div class="adbanner hidden" id="adBanner" role="region" aria-label="Security recommendation">
+  <span class="shield" aria-hidden="true">&#128737;</span>
+  <p><b>Heads up:</b> we recommend using an ad blocker such as <a href="https://github.com/uBlockOrigin/uBOL-home" target="_blank" rel="noopener">uBlock Origin Lite</a> while using embedded players. Third-party players can show malicious ads and pop-ups, and a blocker helps keep you safe.</p>
+  <button class="btn primary" id="adGotIt">Got it</button>
+  <button class="adx" id="adClose" aria-label="Dismiss">&times;</button>
+</div>
 
 <div id="toasts" aria-live="polite"></div>
 
@@ -1282,6 +1301,34 @@ $('logoUrlBtn').onclick = () => {
 };
 $('logoRemove').onclick = () => { localStorage.removeItem(LOGO_KEY); applyLogo(); };
 
+/* ============ Ad-blocker check (light, local-only) ============ */
+// Inserts an invisible "bait" element with classes that ad-blocker cosmetic filters hide.
+// If it gets hidden/removed, a blocker is active. No third-party requests are made.
+const AD_DISMISS_KEY = 'anifin.adbanner.until', AD_SNOOZE_MS = 14 * 24 * 3600 * 1000;
+function adBlockActive() {
+  const bait = document.createElement('div');
+  bait.className = 'adsbox ad-banner ad-placeholder textads banner-ads pub_300x250 sponsored-ad';
+  bait.style.cssText = 'position:absolute;left:-1000px;top:-1000px;width:10px;height:10px;pointer-events:none;';
+  bait.innerHTML = '&nbsp;';
+  document.body.appendChild(bait);
+  const cs = getComputedStyle(bait);
+  const blocked = !bait.isConnected || bait.offsetHeight === 0 || cs.display === 'none' || cs.visibility === 'hidden';
+  bait.remove();
+  return blocked;
+}
+function hideAdBanner(snooze) {
+  $('adBanner').classList.add('hidden'); document.body.classList.remove('has-banner');
+  if (snooze) localStorage.setItem(AD_DISMISS_KEY, String(Date.now() + AD_SNOOZE_MS));
+}
+$('adGotIt').onclick = $('adClose').onclick = () => hideAdBanner(true);
+function checkAdBlock() {
+  if (+localStorage.getItem(AD_DISMISS_KEY) > Date.now()) return;          // dismissed recently
+  setTimeout(() => {                                                       // filters apply a moment after load
+    if (adBlockActive()) return;
+    setTimeout(() => { if (!adBlockActive()) { $('adBanner').classList.remove('hidden'); document.body.classList.add('has-banner'); } }, 2000);   // confirm before nagging
+  }, 1500);
+}
+
 /* ============ Init ============ */
 ['provSelect', 'fFormat', 'fGenre', 'fStatus', 'fSort'].forEach(id => enhanceSelect($(id)));
 enhanceSelect($('pType'), { block: true });
@@ -1300,6 +1347,7 @@ if (alToken()) {   // silently re-check a saved token so the badge reflects real
 }
 $('groupToggle').checked = store.get('anifin.group', true);
 $('groupToggle').onchange = e => { store.set('anifin.group', e.target.checked); loadWatchedRow(); };
+checkAdBlock();
 loadHome();
 route();      // honour a deep link like #watch/159042 on first load
 </script>

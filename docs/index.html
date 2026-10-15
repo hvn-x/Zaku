@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Zaku</title>
+<title>Anime-X</title>
 <link rel="icon" type="image/x-icon" href="Zaku.ico">
 <link rel="icon" type="image/svg+xml" href="Zaku.svg">
 <style>
@@ -164,7 +164,7 @@
   .gbtn { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); color:var(--muted); border-radius:999px; padding:5px 13px; font:inherit; font-size:.8rem; font-weight:600; cursor:pointer; transition:all .15s; }
   .gbtn:hover { color:#fff; background:var(--main); border-color:var(--accent); }
   .foot-bottom { border-top:1px solid rgba(255,255,255,.05); padding:20px 0 26px; color:#7d7873; font-size:.8rem; line-height:1.6; }
-  .gradient-text { background: linear-gradient(135deg, var(--main-hi) 20%, var(--accent) 80%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+  .gradient-text, .logo .gradient-text { background:linear-gradient(135deg,var(--main-hi) 20%,var(--accent) 80%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent; }
   /* ============ Header nav tabs ============ */
   .nav { display:flex; gap:2px; overflow-x:auto; scrollbar-width:none; min-width:0; }
   .nav::-webkit-scrollbar { display:none; }
@@ -227,6 +227,13 @@
   .dd-item .bd { font-size:.7rem; font-weight:700; padding:2px 8px; border-radius:999px; background:rgba(255,255,255,.08); color:var(--muted); }
   .dd-item .bd.done { background:rgba(126,226,160,.12); color:#7ee2a0; }
   .dd-item .bd.prog { background:rgba(232,163,61,.15); color:var(--accent); }
+
+  /* ============ Sources: defaults / site sources / AniList status ============ */
+  .pb { margin-left:8px; font-size:.68rem; font-weight:700; padding:2px 8px; border-radius:999px; background:rgba(255,255,255,.08); color:var(--muted); vertical-align:middle; }
+  .pb.def { background:rgba(232,163,61,.15); color:var(--accent); }
+  .plist .label { margin:10px 0 0; }
+  .box > label { font-size:.78rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); font-weight:700; }
+  #alBox { margin-bottom:16px; }
 
   /* ============ Ad-blocker banner ============ */
   .adbanner { position:fixed; left:50%; bottom:18px; transform:translateX(-50%); z-index:40; width:min(960px,calc(100vw - 28px)); display:flex; align-items:center; gap:14px; padding:14px 16px; border-radius:16px;
@@ -332,6 +339,7 @@
           </div>
           <span id="embedTools" style="display:contents">
             <select id="provSelect" title="Provider"></select>
+            <button class="btn iconbtn" id="starProv" title="Set this source as your default">&#9734;</button>
             <button class="btn iconbtn" id="manageProv" title="Manage providers">&#9881;</button>
           </span>
           <button class="btn" id="prevBtn" disabled>&laquo; Prev</button>
@@ -351,6 +359,10 @@
       </section>
 
       <aside class="side">
+        <div id="alBox" class="hidden">
+          <div class="label">AniList Status</div>
+          <select id="alStatusSel"></select>
+        </div>
         <div id="seasonBox" class="hidden">
           <div class="label">Season / Entry</div>
           <select id="seasonSelect"></select>
@@ -450,6 +462,9 @@
       <h4>AniList Integration <span class="albadge" id="alStatus">Not connected</span></h4>
       <small>Paste your AniList access token to sync progress automatically. Selecting an episode sets that show to <code>CURRENT</code> with the episode as progress. Create a token at <a href="https://anilist.co/settings/developer" target="_blank" rel="noopener">anilist.co/settings/developer</a>. It is stored only in this browser's localStorage as <code>anilist_token</code>.</small>
       <input type="password" id="alTokenInput" placeholder="AniList access token" autocomplete="off">
+      <label for="alDefaultStatus">Status for new entries</label>
+      <select id="alDefaultStatus"></select>
+      <small>Episode progress always syncs automatically. On a title's watch page you can change its status any time; if it is set to Completed, episode syncing pauses so a rewatch can't overwrite it.</small>
       <div class="err" id="alErr"></div>
       <div class="row" style="margin:0">
         <button class="btn primary" id="alConnect">Connect</button>
@@ -463,7 +478,7 @@
     </div>
 
     <h3 class="sec">Embed Providers</h3>
-    <small>Add the embed sources you want to use. Use <code>{ID}</code>, <code>{EP}</code> and <code>{TYPE}</code> (sub/dub) in the URL template. Only use sources you have the right to embed.</small>
+    <small>Add the embed sources you want to use, and star one as your default. Sources set up by the site owner show under Site sources. Use <code>{ID}</code>, <code>{EP}</code> and <code>{TYPE}</code> (sub/dub) in the URL template. Only use sources you have the right to embed.</small>
     <div class="plist" id="plist"></div>
     <div class="form">
       <label for="pName">Name</label>
@@ -550,17 +565,36 @@ async function buildChain(a) {
   return [...back, a, ...fwd];
 }
 
-/* ============ Providers (localStorage) ============ */
-let providers = store.get('anifin.providers', null);
+/* ============ Providers ============ */
+/* GLOBAL (site-wide) sources: everyone who opens this site gets them. Add them here, or put a providers.json
+   next to index.html:  { "default": "my-id", "providers": [ { "id": "my-id", "name": "Name", "idType": "anilist", "template": "https://example.com/embed/{ID}/{EP}/{TYPE}" } ] }
+   idType is "anilist" or "mal". Only list sources you have the right to embed. */
+const GLOBAL_PROVIDERS = [
+  // { id: 'example', name: 'Example Source', idType: 'anilist', template: 'https://provider.example/embed/{ID}/{EP}/{TYPE}' },
+];
+const GLOBAL_DEFAULT = '';     // id from GLOBAL_PROVIDERS (or providers.json) that everyone starts on, e.g. 'example'
+
+const validProv = p => p && typeof p.name === 'string' && p.name.trim() && typeof p.template === 'string' && /^https?:\/\//i.test(p.template) && p.template.includes('{ID}');
+const normSite = (list, tag) => (list || []).filter(validProv).map((p, i) => ({ id: 'g:' + (p.id || tag + i), name: p.name.trim().slice(0, 40), idType: p.idType === 'mal' ? 'mal' : 'anilist', template: p.template, global: true }));
+
+let providers = store.get('anifin.providers', null);          // YOUR sources (this browser only)
 if (providers === null) {
   providers = [];
   const old = localStorage.getItem('embedTpl');
   if (old) providers.push({ id: uid(), name: 'Default', idType: 'anilist', template: old });
   store.set('anifin.providers', providers);
 }
-let providerId = store.get('anifin.provider', null);
-if (!providers.some(p => p.id === providerId)) providerId = providers[0]?.id || null;
-const getProvider = () => providers.find(p => p.id === providerId);
+let siteProviders = normSite(GLOBAL_PROVIDERS, 'c'), siteDefaultId = GLOBAL_DEFAULT ? 'g:' + GLOBAL_DEFAULT : '';
+const allProviders = () => [...siteProviders, ...providers];
+const userDefaultId = () => store.get('anifin.defaultProvider', null);
+// Which source is selected on load: your default > the site's default > last used > first available
+function resolveProvider() {
+  const all = allProviders();
+  return [userDefaultId(), siteDefaultId, store.get('anifin.provider', null)].find(x => x && all.some(p => p.id === x)) || all[0]?.id || null;
+}
+let providerId = resolveProvider();
+let providerPicked = false;     // true once you switch source yourself this session
+const getProvider = () => allProviders().find(p => p.id === providerId);
 const saveProviders = () => { store.set('anifin.providers', providers); store.set('anifin.provider', providerId); };
 
 /* ============ State ============ */
@@ -578,7 +612,7 @@ function saveProgress() {
   store.set('anifin.history', [entry, ...getHistory().filter(h => h.animeId !== a.id)].slice(0, 30));
 }
 function resume(h) {
-  if (providers.some(p => p.id === h.provider)) { providerId = h.provider; saveProviders(); renderProvSelect(); }
+  if (allProviders().some(p => p.id === h.provider)) { providerId = h.provider; providerPicked = true; saveProviders(); renderProvSelect(); }
   location.hash = `#watch/${h.animeId}/${h.episode}`;
 }
 
@@ -716,7 +750,7 @@ async function loadWatch(id, startEp) {
   state.anime = a; state.count = episodeCount(a); state.tab = 0;
   renderWatchHero(a);
   document.title = titleOf(a) + ' – Zaku';
-  renderEpisodes(); updateNav(); refreshAlEntries([id]);
+  renderEpisodes(); updateNav(); refreshAlEntries([id]); renderAlStatus();
 
   // Season chain: reuse it if this entry is already part of it, otherwise (re)build
   if (!state.chain.some(x => x.id === id)) {
@@ -810,14 +844,48 @@ $('nextBtn').onclick = () => selectEpisode(state.ep + 1);
 
 /* ============ Embed player (provider-driven) ============ */
 function renderProvSelect() {
-  const s = $('provSelect'); s.innerHTML = '';
-  if (!providers.length) { s.appendChild(new Option('No providers – add one', '')); s.disabled = true; refreshSelect(s); return; }
-  s.disabled = false;
-  providers.forEach(p => s.appendChild(new Option(p.name + (p.idType === 'mal' ? ' (MAL)' : ''), p.id)));
-  s.value = providerId;
-  refreshSelect(s);
+  const sel = $('provSelect'), all = allProviders(); sel.innerHTML = '';
+  if (!all.length) { sel.appendChild(new Option('No providers – add one', '')); sel.disabled = true; refreshSelect(sel); renderStar(); return; }
+  sel.disabled = false;
+  all.forEach(p => {
+    const o = new Option(p.name + (p.idType === 'mal' ? ' (MAL)' : ''), p.id);
+    if (p.id === userDefaultId()) { o.dataset.badge = '★ Default'; o.dataset.badgeCls = 'prog'; }
+    else if (p.global) o.dataset.badge = 'Site';
+    sel.appendChild(o);
+  });
+  sel.value = providerId;
+  refreshSelect(sel); renderStar();
 }
-$('provSelect').onchange = e => { providerId = e.target.value; saveProviders(); updateNav(); playEmbed(); saveProgress(); };
+$('provSelect').onchange = e => { providerId = e.target.value; providerPicked = true; saveProviders(); updateNav(); playEmbed(); saveProgress(); renderStar(); };
+
+// ★ = your preferred source (used automatically whenever the site loads)
+function renderStar() {
+  const b = $('starProv'), on = !!providerId && providerId === userDefaultId();
+  b.textContent = on ? '★' : '☆'; b.classList.toggle('active', on); b.disabled = !providerId;
+  b.title = on ? 'Your default source (click to clear)' : 'Set this source as your default';
+}
+function toggleDefault(id) {
+  if (!id) return;
+  if (userDefaultId() === id) { localStorage.removeItem('anifin.defaultProvider'); toast('Default source cleared'); }
+  else { store.set('anifin.defaultProvider', id); toast('Default source: ' + allProviders().find(p => p.id === id)?.name); }
+  renderProvSelect(); renderProvList();
+}
+$('starProv').onclick = () => toggleDefault(providerId);
+
+// Optional providers.json shipped next to index.html (site-wide sources, editable without touching this file)
+async function loadSiteProviders() {
+  try {
+    const r = await fetch('providers.json', { cache: 'no-cache' });
+    if (r.ok) {
+      const j = await r.json(), list = Array.isArray(j) ? j : j.providers;
+      const have = new Set(siteProviders.map(p => p.id));
+      siteProviders = [...siteProviders, ...normSite(list, 'j').filter(p => !have.has(p.id))];
+      if (j && j.default) siteDefaultId = 'g:' + j.default;
+    }
+  } catch (e) { /* no providers.json – that's fine */ }
+  if (!providerPicked) providerId = resolveProvider();
+  renderProvSelect(); if (state.anime) { updateNav(); playEmbed(); }
+}
 
 // Returns { url } or { error }; supplies the AniList or MAL ID of the ACTIVE entry
 function buildEmbed() {
@@ -887,24 +955,36 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('setting
 function resetForm() { editingId = null; $('pName').value = ''; $('pTpl').value = ''; $('pType').value = 'anilist'; refreshSelect($('pType')); $('pErr').textContent = ''; $('pSave').textContent = 'Add provider'; $('pCancel').classList.add('hidden'); }
 $('pCancel').onclick = resetForm;
 
-function renderProvList() {
-  const box = $('plist'); box.innerHTML = '';
-  if (!providers.length) box.appendChild(el('div', 'status', 'No providers yet. Add one below.'));
-  providers.forEach(p => {
-    const row = el('div', 'prov'), info = el('div');
-    info.appendChild(el('b', '', p.name));
-    info.appendChild(el('small', '', (p.idType === 'mal' ? 'MyAnimeList ID' : 'AniList ID') + ' • ' + p.template));
+function provRow(p) {
+  const row = el('div', 'prov'), info = el('div'), isDef = userDefaultId() === p.id;
+  const nm = el('b', '', p.name);
+  if (isDef) nm.appendChild(el('span', 'pb def', '★ Default')); else if (p.id === siteDefaultId) nm.appendChild(el('span', 'pb', 'Site default'));
+  info.appendChild(nm);
+  info.appendChild(el('small', '', (p.idType === 'mal' ? 'MyAnimeList ID' : 'AniList ID') + ' • ' + p.template));
+  const star = el('button', 'btn' + (isDef ? ' active' : ''), isDef ? '★ Default' : 'Set default');
+  star.onclick = () => toggleDefault(p.id);
+  row.append(info, star);
+  if (!p.global) {                                   // site sources are read-only
     const edit = el('button', 'btn', 'Edit'), del = el('button', 'btn', 'Delete');
     edit.onclick = () => { editingId = p.id; $('pName').value = p.name; $('pType').value = p.idType; refreshSelect($('pType')); $('pTpl').value = p.template; $('pSave').textContent = 'Save changes'; $('pCancel').classList.remove('hidden'); $('pErr').textContent = ''; };
     del.onclick = () => {
       if (!confirm(`Delete "${p.name}"?`)) return;
       providers = providers.filter(x => x.id !== p.id);
-      if (providerId === p.id) providerId = providers[0]?.id || null;
+      if (userDefaultId() === p.id) localStorage.removeItem('anifin.defaultProvider');
+      if (providerId === p.id) providerId = resolveProvider();
       saveProviders(); renderProvSelect(); renderProvList(); if (editingId === p.id) resetForm();
       if (state.anime) { updateNav(); playEmbed(); }
     };
-    row.append(info, edit, del); box.appendChild(row);
-  });
+    row.append(edit, del);
+  }
+  return row;
+}
+function renderProvList() {
+  const box = $('plist'); box.innerHTML = '';
+  if (siteProviders.length) { box.appendChild(el('div', 'label', 'Site sources')); siteProviders.forEach(p => box.appendChild(provRow(p))); }
+  if (siteProviders.length && providers.length) box.appendChild(el('div', 'label', 'Your sources'));
+  if (!siteProviders.length && !providers.length) box.appendChild(el('div', 'status', 'No providers yet. Add one below.'));
+  providers.forEach(p => box.appendChild(provRow(p)));
 }
 
 $('pSave').onclick = () => {
@@ -912,7 +992,7 @@ $('pSave').onclick = () => {
   if (!name) return $('pErr').textContent = 'Give the provider a name.';
   if (!/^https?:\/\//i.test(template)) return $('pErr').textContent = 'Template must start with http:// or https://';
   if (!template.includes('{ID}')) return $('pErr').textContent = 'Template must contain {ID}.';
-  const wasEmpty = !providers.length;
+  const wasEmpty = !allProviders().length;
   let changedId;
   if (editingId) { Object.assign(providers.find(p => p.id === editingId), { name, idType, template }); changedId = editingId; }
   else { changedId = uid(); providers.push({ id: changedId, name, idType, template }); }
@@ -940,6 +1020,7 @@ const SAVE_MUTATION = `mutation($mediaId:Int,$progress:Int,$status:MediaListStat
 function renderAl() {
   const label = al.status === 'bad' ? '● Token error' : '● AniList' + (al.name ? ': ' + al.name : '');
   const b = $('alBadge');
+  renderAlStatus();
   b.textContent = label; b.className = 'albadge ' + (al.status === 'bad' ? 'bad' : 'ok') + (al.status === 'off' ? ' hidden' : '');
   const s = $('alStatus');
   s.textContent = al.status === 'off' ? 'Not connected' : al.status === 'bad' ? 'Token error' : 'Connected' + (al.name ? ' as ' + al.name : '');
@@ -979,12 +1060,14 @@ function syncAniList(a, ep) {
   if (!token || !a || !ep) return;
   clearTimeout(syncTimer);
   syncTimer = setTimeout(async () => {
-    const key = a.id + ':' + ep;
+    const status = alStatusOf(a.id);                       // the status you picked (episodes stay automatic)
+    if (status === 'COMPLETED') return;                     // don't let a rewatch overwrite a completed entry
+    const key = a.id + ':' + ep + ':' + status;
     if (key === lastSynced) return;
     try {
-      await gql(SAVE_MUTATION, { mediaId: a.id, progress: ep, status: 'CURRENT' }, token);
+      await gql(SAVE_MUTATION, { mediaId: a.id, progress: ep, status }, token);
       lastSynced = key; toast(`Synced Ep ${ep} to AniList!`);
-      alEntries.set(a.id, { progress: ep, status: 'CURRENT' }); if (state.anime && state.anime.id === a.id) { renderEpisodes(); renderSeasons(); }
+      alEntries.set(a.id, { progress: ep, status }); if (state.anime && state.anime.id === a.id) { renderEpisodes(); renderSeasons(); renderAlStatus(); }
     } catch (e) {
       if (isAuthError(e)) { al.status = 'bad'; renderAl(); }
       toast('AniList sync failed: ' + e.message, 'err');
@@ -1116,7 +1199,7 @@ async function refreshAlEntries(ids) {
   try {
     const d = await gql(`query($u:Int,$ids:[Int]){ Page(perPage:50){ mediaList(userId:$u, mediaId_in:$ids, type:ANIME){ mediaId progress status } } }`, { u: al.id, ids }, alToken());
     d.Page.mediaList.forEach(e => alEntries.set(e.mediaId, { progress: e.progress, status: e.status }));
-    if (state.anime) { renderEpisodes(); renderSeasons(); }
+    if (state.anime) { renderEpisodes(); renderSeasons(); renderAlStatus(); }
   } catch (e) { /* optional – local history still works */ }
 }
 async function fetchCompleted(pages = 2) {
@@ -1178,6 +1261,29 @@ async function loadWatchedRow() {
     if (groups.length) box.appendChild(buildRow('Already Watched', groups.slice(0, 24).map(g => groupCard(g, 'Completed'))));
   } catch (e) { /* ignore */ }
 }
+
+/* ============ AniList status (you choose it; episode progress stays automatic) ============ */
+const AL_STATUSES = [['CURRENT', 'Watching'], ['PLANNING', 'Planning'], ['COMPLETED', 'Completed'], ['PAUSED', 'Paused'], ['DROPPED', 'Dropped'], ['REPEATING', 'Rewatching']];
+const alStatusLabel = v => (AL_STATUSES.find(x => x[0] === v) || [v, v])[1];
+const defaultAlStatus = () => store.get('anifin.alStatusDefault', 'CURRENT');
+const alStatusOf = id => alEntries.get(id)?.status || defaultAlStatus();
+const fillStatus = sel => { sel.innerHTML = ''; AL_STATUSES.forEach(([v, l]) => sel.appendChild(new Option(l, v))); };
+function renderAlStatus() {
+  const show = al.status === 'ok' && !!state.anime;
+  $('alBox').classList.toggle('hidden', !show);
+  if (show) { $('alStatusSel').value = alStatusOf(state.anime.id); refreshSelect($('alStatusSel')); }
+}
+$('alStatusSel').onchange = async e => {
+  const id = state.anime?.id, status = e.target.value, token = alToken();
+  if (!id || !token) return;
+  try {
+    const d = await gql(`mutation($mediaId:Int,$status:MediaListStatus){ SaveMediaListEntry(mediaId:$mediaId, status:$status){ id status progress } }`, { mediaId: id, status }, token);
+    alEntries.set(id, { progress: d.SaveMediaListEntry.progress, status: d.SaveMediaListEntry.status });
+    toast('AniList status: ' + alStatusLabel(status));
+    renderEpisodes(); renderSeasons();
+  } catch (err) { toast('Could not update status: ' + err.message, 'err'); renderAlStatus(); }
+};
+$('alDefaultStatus').onchange = e => store.set('anifin.alStatusDefault', e.target.value);
 
 /* ============ Styled dropdowns (wrap native <select>, keep its value/change events) ============ */
 const ddMap = new Map();
@@ -1265,14 +1371,17 @@ async function loadSchedule() {
 }
 
 /* ============ Custom logo (replaces the text logo) ============ */
-const LOGO_KEY = 'anifin.logo', logoDefault = $('logo').innerHTML;
+const LOGO_KEY = 'anifin.logo';
+// Remember each logo element's ORIGINAL markup separately (header = plain text with an inline gradient,
+// footer = <span class="gradient-text">), so removing/never setting a custom logo never flattens the footer.
+const logoDefaults = new Map([[$('logo'), $('logo').innerHTML], [$('flogo'), $('flogo').innerHTML]]);
 function applyLogo() {
   const src = localStorage.getItem(LOGO_KEY);
   [$('logo'), $('flogo')].forEach(h => {
-    h.innerHTML = logoDefault;
+    h.innerHTML = logoDefaults.get(h);
     if (!src) return;
     const img = el('img', 'logo-img'); img.alt = 'Zaku'; img.src = src;
-    img.onerror = () => { h.innerHTML = logoDefault; };       // broken URL → fall back to text
+    img.onerror = () => { h.innerHTML = logoDefaults.get(h); };       // broken URL → fall back to the text logo
     h.innerHTML = ''; h.appendChild(img);
   });
   $('logoPreview').classList.toggle('hidden', !src); if (src) $('logoPreview').src = src;
@@ -1333,10 +1442,13 @@ function checkAdBlock() {
 }
 
 /* ============ Init ============ */
+fillStatus($('alStatusSel')); fillStatus($('alDefaultStatus')); $('alDefaultStatus').value = defaultAlStatus();
 ['provSelect', 'fFormat', 'fGenre', 'fStatus', 'fSort'].forEach(id => enhanceSelect($(id)));
+enhanceSelect($('alStatusSel'), { block: true }); enhanceSelect($('alDefaultStatus'), { block: true });
 enhanceSelect($('pType'), { block: true });
 enhanceSelect($('seasonSelect'), { block: true });
 renderProvSelect();
+loadSiteProviders();
 renderAl();
 applyLogo();
 if (alToken()) {   // silently re-check a saved token so the badge reflects reality

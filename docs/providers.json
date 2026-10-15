@@ -1,0 +1,1 @@
+{ "default": "ryu", "providers": [ { "id": "ryu", "name": "Ryu", "idType": "anilist", "template": "https://megaplay.buzz/stream/ani/{ID}/{EP}/{TYPE}" } ] }

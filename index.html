@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anime-X</title>
+<style>
+  /* ============ Theme tokens (Fin-X: frosted glass, crimson main, amber accent) ============ */
+  :root {
+    --bg:#0f0f12; --main:#8a1a1a; --main-hi:#a82323; --accent:#E8A33D;
+    --text:#f2eeea; --muted:#a39d98;
+    --glass:rgba(255,255,255,.05); --glass-hi:rgba(255,255,255,.10); --glass-border:rgba(255,255,255,.10);
+    --blur:blur(18px) saturate(140%); --radius:14px;
+    --bar:linear-gradient(180deg,var(--accent),var(--main));
+    --gutter:clamp(14px,3vw,48px);
+    --card-w:clamp(140px,11.5vw,200px);
+  }
+  * { box-sizing:border-box; }
+  html { scrollbar-color:var(--main) transparent; }
+  body { margin:0; color:var(--text); min-height:100vh; background:var(--bg); font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+  .hidden { display:none!important; }
+  small { color:var(--muted); } code { color:var(--accent); }
+
+  /* ============ Header ============ */
+  header { position:fixed; top:0; left:0; right:0; z-index:6; display:flex; gap:14px; align-items:center; padding:12px var(--gutter);
+    background:linear-gradient(rgba(15,15,18,.88),rgba(15,15,18,.4)); backdrop-filter:var(--blur); -webkit-backdrop-filter:var(--blur); }
+  header::after { content:""; position:absolute; left:0; right:0; bottom:0; height:2px; background:linear-gradient(90deg,var(--main),var(--accent),transparent 70%); }
+  .logo { font-size:1.45rem; font-weight:800; letter-spacing:-.5px; margin:0; cursor:pointer; white-space:nowrap; }
+  .logo span { color:var(--main-hi); } .logo b { color:var(--accent); }
+  .searchbox { flex:1; max-width:560px; margin-left:auto; position:relative; }
+  .searchbox svg { position:absolute; left:14px; top:50%; transform:translateY(-50%); width:18px; height:18px; stroke:var(--muted); fill:none; stroke-width:2; }
+  input[type=text], input[type=search], select { width:100%; padding:11px 16px; border-radius:10px; border:1px solid var(--glass-border); background:var(--glass); color:var(--text); font:inherit; font-size:.92rem; transition:border-color .2s, box-shadow .2s, background .2s; }
+  input[type=search] { padding-left:42px; border-radius:999px; }
+  select option { background:#1a1a1f; color:var(--text); }
+  input::placeholder { color:var(--muted); }
+  input:focus, select:focus { outline:none; border-color:var(--accent); background:var(--glass-hi); box-shadow:0 0 0 3px rgba(232,163,61,.18); }
+
+  /* ============ Buttons ============ */
+  button.btn, .eps button, .tabs button { background:var(--glass); color:var(--text); border:1px solid var(--glass-border); border-radius:10px; padding:9px 14px; cursor:pointer; font:inherit; font-size:.88rem; font-weight:600; transition:background .15s, border-color .15s, transform .15s; white-space:nowrap; }
+  button.btn:hover, .eps button:hover, .tabs button:hover { background:var(--main-hi); border-color:var(--main-hi); transform:translateY(-1px); }
+  button.btn:disabled { opacity:.35; pointer-events:none; }
+  button.primary { background:var(--main); border-color:var(--accent); }
+  button.active, .eps button.active, .tabs button.active { background:var(--main)!important; border-color:var(--accent)!important; color:#fff!important; box-shadow:0 0 0 1px var(--accent) inset; }
+  .iconbtn { padding:9px 11px; }
+
+  /* ============ Hero (home) & backdrop (watch) ============ */
+  .hero, .wv-hero { position:relative; display:flex; align-items:flex-end; overflow:hidden; }
+  .hero { min-height:min(72vh,680px); padding:120px var(--gutter) 64px; }
+  .hero-bg { position:absolute; inset:0; background-size:cover; background-position:center 25%; }
+  .hero::before, .wv-hero::before { content:""; position:absolute; inset:0; z-index:1;
+    background:linear-gradient(90deg,rgba(15,15,18,.96) 0%,rgba(15,15,18,.6) 42%,rgba(15,15,18,.1) 80%), linear-gradient(0deg,var(--bg) 0%,transparent 45%); }
+  .hero-body { position:relative; z-index:2; max-width:620px; padding-left:16px; }
+  .hero-body::before { content:""; position:absolute; left:0; top:4px; bottom:4px; width:4px; border-radius:2px; background:var(--bar); }
+  .hero h1 { font-size:clamp(1.8rem,4vw,3.2rem); line-height:1.08; margin:10px 0; letter-spacing:-.5px; }
+  .hero p { color:#ddd6d0; line-height:1.6; margin:0 0 20px; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+  .hero-actions .btn { padding:12px 24px; font-size:1rem; }
+  .dots { position:absolute; z-index:2; right:var(--gutter); bottom:28px; display:flex; gap:8px; }
+  .dots i { width:26px; height:4px; border-radius:2px; background:rgba(255,255,255,.25); cursor:pointer; transition:background .2s; }
+  .dots i.on { background:var(--accent); }
+  .tags { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .tag { padding:4px 11px; border-radius:999px; font-size:.78rem; background:var(--glass-hi); border:1px solid var(--glass-border); }
+  .tag.score { background:var(--accent); color:#1a1208; font-weight:800; border:none; }
+  .tag.hot { background:rgba(232,163,61,.15); border-color:var(--accent); color:var(--accent); }
+
+  /* ============ Rows & cards ============ */
+  main { padding-bottom:60px; }
+  .searchpage { padding:96px var(--gutter) 0; }
+  .rows { padding:0 var(--gutter); margin-top:-24px; position:relative; z-index:3; }
+  .row-sec { margin:0 0 30px; }
+  .row-head { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+  .row-head::before { content:""; width:4px; height:22px; border-radius:2px; background:var(--bar); }
+  .row-head h2 { margin:0; font-size:1.15rem; flex:1; }
+  .row-head .btn { padding:6px 11px; }
+  .scroller { display:flex; gap:clamp(12px,1.2vw,20px); overflow-x:auto; scroll-snap-type:x proximity; padding:6px 2px 14px; scrollbar-width:none; }
+  .scroller::-webkit-scrollbar { display:none; }
+  .scroller .card { flex:0 0 var(--card-w); scroll-snap-align:start; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(clamp(150px,13vw,210px),1fr)); gap:clamp(14px,1.4vw,24px); }
+  .status { color:var(--muted); padding:16px 0; }
+  .card { position:relative; border-radius:var(--radius); overflow:hidden; cursor:pointer; background:var(--glass); border:1px solid var(--glass-border); transition:transform .2s, border-color .2s, box-shadow .2s; }
+  .card:hover { transform:translateY(-6px); border-color:var(--accent); box-shadow:0 14px 34px rgba(138,26,26,.5); }
+  .card img { width:100%; aspect-ratio:2/3; object-fit:cover; display:block; background:#111; }
+  .card .badge { position:absolute; top:8px; left:8px; padding:3px 9px; border-radius:999px; font-size:.7rem; font-weight:800; color:#1a1208; background:var(--accent); }
+  .card .rm { position:absolute; top:6px; right:6px; width:26px; height:26px; border-radius:50%; border:none; cursor:pointer; color:#fff; background:rgba(0,0,0,.6); opacity:0; transition:opacity .2s, background .2s; }
+  .card:hover .rm { opacity:1; } .card .rm:hover { background:var(--main-hi); }
+  .card p { margin:0; padding:11px 12px 4px; font-size:.86rem; line-height:1.3; font-weight:600; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .card small { display:block; padding:0 12px 11px; font-size:.75rem; color:var(--accent); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .card:not(:has(small)) p { padding-bottom:13px; }
+
+  /* ============ Watch page ============ */
+  .wv-hero { min-height:clamp(300px,46vh,460px); padding:96px var(--gutter) 40px; }
+  .wv-info { position:relative; z-index:2; display:flex; gap:22px; align-items:flex-end; max-width:1000px; }
+  .wv-info img { width:clamp(100px,11vw,170px); border-radius:12px; border:1px solid var(--glass-border); box-shadow:0 12px 36px rgba(0,0,0,.6); }
+  .wv-info h1 { font-size:clamp(1.5rem,3vw,2.4rem); line-height:1.1; margin:10px 0; letter-spacing:-.4px; }
+  .wv-info p { margin:0; color:#d8d1cb; line-height:1.6; font-size:.92rem; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; cursor:pointer; }
+  .wv-info p.open { -webkit-line-clamp:unset; max-height:200px; overflow:auto; display:block; }
+  .watch { display:grid; grid-template-columns:minmax(0,1fr); gap:24px; align-items:start; padding:0 var(--gutter); position:relative; z-index:3; }
+  @media (min-width:1100px) { .watch { grid-template-columns:minmax(0,1fr) clamp(340px,28vw,460px); } }
+  .side { padding:20px; border-radius:18px; background:rgba(255,255,255,.04); border:1px solid var(--glass-border); backdrop-filter:var(--blur); -webkit-backdrop-filter:var(--blur); }
+  .label { margin:0 0 8px; font-size:.78rem; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); font-weight:700; }
+  .side .label:not(:first-child) { margin-top:18px; }
+  .tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  .tabs button { padding:6px 11px; font-size:.8rem; }
+  .eps { display:grid; grid-template-columns:repeat(auto-fill,minmax(52px,1fr)); gap:8px; max-height:min(46vh,420px); overflow:auto; padding:2px; }
+  .eps button { padding:9px 0; }
+  .toolbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:14px 0; }
+  .toolbar .sep { flex:1; }
+  .toolbar select { width:auto; min-width:150px; padding:9px 12px; font-weight:600; }
+  .seg { display:inline-flex; gap:4px; padding:4px; border-radius:12px; background:rgba(0,0,0,.35); border:1px solid var(--glass-border); }
+  .seg .btn { border:none; background:transparent; }
+  .nowplaying { margin:0 0 10px; font-size:.85rem; color:var(--muted); } .nowplaying b { color:var(--accent); }
+  .player { position:relative; width:100%; aspect-ratio:16/9; background:#000; border-radius:var(--radius); overflow:hidden; border:1px solid var(--glass-border); box-shadow:0 18px 50px rgba(0,0,0,.65); }
+  .player iframe, .player video { position:absolute; inset:0; width:100%; height:100%; border:0; }
+  .player video { display:none; background:#000; }
+  .placeholder { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center; padding:24px; color:var(--muted); background:radial-gradient(circle at 50% 40%,rgba(138,26,26,.2),transparent 65%); }
+  .row { display:flex; gap:8px; margin:10px 0; }
+
+  /* ============ Settings dialog ============ */
+  .overlay { position:fixed; inset:0; z-index:20; display:none; overflow-y:auto; background:rgba(8,8,10,.8); backdrop-filter:blur(10px); }
+  .overlay.open { display:block; animation:fade .2s ease; }
+  @keyframes fade { from { opacity:0 } to { opacity:1 } }
+  .dialog { max-width:720px; margin:6vh auto; padding:24px; border-radius:20px; background:rgba(28,28,34,.92); border:1px solid var(--glass-border); backdrop-filter:var(--blur); -webkit-backdrop-filter:var(--blur); box-shadow:0 30px 80px rgba(0,0,0,.6); }
+  .dialog h3 { margin:0 0 4px; font-size:1.3rem; }
+  .plist { display:grid; gap:8px; margin:16px 0; }
+  .prov { display:flex; gap:12px; align-items:center; padding:12px 14px; border-radius:12px; background:var(--glass); border:1px solid var(--glass-border); }
+  .prov div { flex:1; min-width:0; } .prov b { display:block; }
+  .prov small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .form { display:grid; gap:10px; padding-top:16px; border-top:1px solid var(--glass-border); }
+  .form label { font-size:.78rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); font-weight:700; }
+  .err { color:#ff8a8a; font-size:.85rem; min-height:1.2em; }
+
+  /* ============ AniList badge & settings card ============ */
+  .albadge { display:inline-flex; align-items:center; gap:6px; padding:4px 11px; border-radius:999px; font-size:.78rem; font-weight:700; white-space:nowrap; background:var(--glass-hi); border:1px solid var(--glass-border); color:var(--muted); }
+  .albadge.ok { color:#7ee2a0; border-color:rgba(126,226,160,.4); background:rgba(126,226,160,.1); }
+  .albadge.bad { color:#ff8a8a; border-color:rgba(255,138,138,.4); background:rgba(255,138,138,.1); }
+  #alBadge { cursor:pointer; }
+  .box { padding:16px; border-radius:14px; background:var(--glass); border:1px solid var(--glass-border); margin:16px 0; display:grid; gap:10px; }
+  .box h4 { margin:0; display:flex; align-items:center; gap:10px; font-size:1rem; }
+  .box h4 .albadge { margin-left:auto; }
+  .dialog h3.sec { margin-top:22px; }
+  .dialog a { color:var(--accent); }
+
+  /* ============ Toasts ============ */
+  #toasts { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); z-index:50; display:grid; gap:8px; justify-items:center; pointer-events:none; }
+  .toast { padding:11px 18px; border-radius:12px; font-size:.9rem; font-weight:600; background:rgba(28,28,34,.96); border:1px solid var(--accent); box-shadow:0 12px 36px rgba(0,0,0,.6); animation:rise .25s ease; transition:opacity .4s; }
+  .toast.err { border-color:#ff8a8a; } .toast.out { opacity:0; }
+  @keyframes rise { from { opacity:0; transform:translateY(10px) } to { opacity:1; transform:none } }
+
+  /* ============ Browse filter bar ============ */
+  .filterbar { display:flex; gap:10px; flex-wrap:wrap; margin:0 0 18px; }
+  .filterbar select, .filterbar input { width:auto; min-width:130px; padding:9px 12px; }
+  .loadmore { display:flex; justify-content:center; margin:26px 0 6px; }
+
+  /* ============ Footer ============ */
+  .site-footer { background:#0d0d11; border-top:1px solid rgba(255,255,255,.06); padding:48px var(--gutter) 0; }
+  .foot-grid { display:grid; grid-template-columns:1.7fr repeat(4,1fr); gap:32px; padding-bottom:40px; }
+  .foot-brand p { color:var(--muted); font-size:.88rem; line-height:1.65; max-width:340px; margin:12px 0 0; }
+  .foot-col h4 { margin:0 0 14px; font-size:.75rem; text-transform:uppercase; letter-spacing:.14em; color:#cfc8c2; }
+  .foot-col { display:flex; flex-direction:column; align-items:flex-start; gap:9px; }
+  .flink { background:none; border:none; padding:0; font:inherit; font-size:.88rem; color:var(--muted); cursor:pointer; text-align:left; transition:color .15s, transform .15s; }
+  .flink:hover { color:var(--accent); transform:translateX(3px); }
+  .foot-genres { display:flex; flex-wrap:wrap; gap:8px; }
+  .gbtn { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); color:var(--muted); border-radius:999px; padding:5px 13px; font:inherit; font-size:.8rem; font-weight:600; cursor:pointer; transition:all .15s; }
+  .gbtn:hover { color:#fff; background:var(--main); border-color:var(--accent); }
+  .foot-bottom { border-top:1px solid rgba(255,255,255,.05); padding:20px 0 26px; color:#7d7873; font-size:.8rem; line-height:1.6; }
+  @media (max-width:900px) { .foot-grid { grid-template-columns:repeat(2,1fr); } .foot-brand { grid-column:1/-1; } }
+  @media (max-width:520px) { .foot-grid { grid-template-columns:1fr; } #alBadge { display:none; } }
+
+  @media (max-width:600px) { .wv-info { flex-direction:column; align-items:flex-start; } .hero { min-height:60vh; } .toolbar select { min-width:0; flex:1; } }
+</style>
+</head>
+<body>
+<header>
+  <h1 class="logo" id="logo" style="background: linear-gradient(135deg, var(--main-hi) 20%, var(--accent) 80%); -webkit-background-clip: text; background-clip: text; color: transparent;">Zaku</h1>
+  <button class="btn hidden" id="backBtn">&larr; Back to Home</button>
+  <div class="searchbox">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    <input type="search" id="search" placeholder="Search anime by title…" autocomplete="off">
+  </div>
+  <span class="albadge ok hidden" id="alBadge" title="AniList sync is active">&#9679; AniList</span>
+  <button class="btn iconbtn" id="openSettings" title="Settings">&#9881; Settings</button>
+</header>
+
+<main>
+  <!-- ========== HOME VIEW ========== -->
+  <div id="homeView">
+    <div id="home">
+      <section class="hero" id="hero">
+        <div class="hero-bg" id="heroBg"></div>
+        <div class="hero-body">
+          <div class="tags" id="heroTags"></div>
+          <h1 id="heroTitle">Loading…</h1>
+          <p id="heroDesc"></p>
+          <div class="hero-actions"><button class="btn primary" id="heroWatch">&#9654; Watch Now</button></div>
+        </div>
+        <div class="dots" id="dots"></div>
+      </section>
+      <div class="rows" id="rows"></div>
+    </div>
+    <div class="searchpage hidden" id="searchPage">
+      <div class="row-head"><h2 id="searchTitle"></h2></div>
+      <div class="filterbar hidden" id="filterBar">
+        <select id="fFormat" title="Format"><option value="">Any format</option><option value="TV">TV</option><option value="MOVIE">Movie</option><option value="OVA">OVA</option><option value="ONA">ONA</option><option value="SPECIAL">Special</option></select>
+        <select id="fGenre" title="Genre"><option value="">Any genre</option></select>
+        <select id="fStatus" title="Status"><option value="">Any status</option><option value="RELEASING">Airing</option><option value="FINISHED">Completed</option><option value="NOT_YET_RELEASED">Upcoming</option></select>
+        <select id="fSort" title="Sort"><option value="POPULARITY_DESC">Most popular</option><option value="SCORE_DESC">Top rated</option><option value="TRENDING_DESC">Trending</option><option value="START_DATE_DESC">Newest</option><option value="TITLE_ROMAJI">Title A–Z</option></select>
+        <input type="number" id="fYear" placeholder="Year" min="1940" max="2100">
+      </div>
+      <div class="status" id="searchStatus"></div>
+      <div class="grid" id="searchGrid"></div>
+      <div class="loadmore"><button class="btn hidden" id="loadMore">Load more</button></div>
+    </div>
+  </div>
+
+  <!-- ========== WATCH VIEW (#watch/{id}) ========== -->
+  <div id="watchView" class="hidden">
+    <section class="wv-hero">
+      <div class="hero-bg" id="wvBg"></div>
+      <div class="wv-info">
+        <img id="mPoster" alt="">
+        <div>
+          <div class="tags" id="mMeta"></div>
+          <h1 id="mTitle"></h1>
+          <p id="mDesc" title="Click to expand"></p>
+        </div>
+      </div>
+    </section>
+
+    <div class="watch">
+      <section class="stage">
+        <p class="nowplaying" id="nowPlaying">No episode selected</p>
+        <div class="player">
+          <div class="placeholder" id="placeholder">Select an episode to start watching.</div>
+          <iframe id="frame" class="hidden" allowfullscreen allow="autoplay; fullscreen; encrypted-media"></iframe>
+          <video id="video" controls playsinline></video>
+        </div>
+        <div class="toolbar">
+          <div class="seg">
+            <button class="btn active" id="modeEmbed">Embed Player</button>
+            <button class="btn" id="modeHls">Custom HLS Player</button>
+          </div>
+          <span id="embedTools" style="display:contents">
+            <select id="provSelect" title="Provider"></select>
+            <button class="btn iconbtn" id="manageProv" title="Manage providers">&#9881;</button>
+          </span>
+          <button class="btn" id="prevBtn" disabled>&laquo; Prev</button>
+          <button class="btn" id="nextBtn" disabled>Next &raquo;</button>
+          <span class="sep"></span>
+          <div class="seg" id="langSeg">
+            <button class="btn active" id="subBtn">Sub</button>
+            <button class="btn" id="dubBtn">Dub</button>
+          </div>
+        </div>
+        <div id="hlsSettings" class="hidden">
+          <div class="row">
+            <input type="text" id="m3u8Input" placeholder="Direct .m3u8 URL you have rights to play">
+            <button class="btn" id="m3u8Play">Play</button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="side">
+        <div id="seasonBox" class="hidden">
+          <div class="label">Season / Entry</div>
+          <select id="seasonSelect"></select>
+        </div>
+        <div class="label">Episodes</div>
+        <div class="tabs" id="tabs"></div>
+        <div class="eps" id="eps"></div>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<!-- ========== FOOTER ========== -->
+<footer class="site-footer">
+  <div class="foot-grid">
+    <div class="foot-brand">
+      <h2 class="logo" id="flogo" style="background: linear-gradient(135deg, var(--main-hi) 20%, var(--accent) 80%); -webkit-background-clip: text; background-clip: text; color: transparent;">Zaku</h2>
+      <p>Zaku keeps anime easy: seamless search, automatic season chaining, and self-hosted watch tracking.</p>
+    </div>
+    <nav class="foot-col" aria-label="Watch">
+      <h4>Watch</h4>
+      <button class="flink" data-act="all">All Series</button>
+      <button class="flink" data-act="movies">Movies</button>
+      <button class="flink" data-act="browse">Browse with Filters</button>
+    </nav>
+    <nav class="foot-col" aria-label="Charts">
+      <h4>Charts</h4>
+      <button class="flink" data-act="airing">Top Airing</button>
+      <button class="flink" data-act="popular">Most Popular</button>
+      <button class="flink" data-act="completed">Completed</button>
+    </nav>
+    <nav class="foot-col" aria-label="Handy utilities">
+      <h4>Handy</h4>
+      <button class="flink" data-act="random">Random Pick</button>
+      <button class="flink" data-act="mylist">My Anime List</button>
+      <button class="flink" data-act="az">A-Z Index</button>
+    </nav>
+    <nav class="foot-col" aria-label="Genres">
+      <h4>Genres</h4>
+      <div class="foot-genres">
+        <button class="gbtn" data-genre="Action">Action</button>
+        <button class="gbtn" data-genre="Romance">Romance</button>
+        <button class="gbtn" data-genre="Comedy">Comedy</button>
+        <button class="gbtn" data-genre="Fantasy">Fantasy</button>
+        <button class="gbtn" data-tag="Isekai">Isekai</button>
+      </div>
+    </nav>
+  </div>
+  <div class="foot-bottom">
+    Zaku does not host any video content. All streams are routed via user-configured embed templates and client-side web requests. &copy; 2026 Zaku
+  </div>
+</footer>
+
+<div id="toasts" aria-live="polite"></div>
+
+<!-- Settings dialog -->
+<div class="overlay" id="settings">
+  <div class="dialog">
+    <h3>Settings</h3>
+
+    <!-- AniList integration -->
+    <div class="box">
+      <h4>AniList Integration <span class="albadge" id="alStatus">Not connected</span></h4>
+      <small>Paste your AniList access token to sync progress automatically. Selecting an episode sets that show to <code>CURRENT</code> with the episode as progress. Create a token at <a href="https://anilist.co/settings/developer" target="_blank" rel="noopener">anilist.co/settings/developer</a>. It is stored only in this browser's localStorage as <code>anilist_token</code>.</small>
+      <input type="password" id="alTokenInput" placeholder="AniList access token" autocomplete="off">
+      <div class="err" id="alErr"></div>
+      <div class="row" style="margin:0">
+        <button class="btn primary" id="alConnect">Connect</button>
+        <button class="btn hidden" id="alDisconnect">Disconnect</button>
+      </div>
+    </div>
+
+    <h3 class="sec">Embed Providers</h3>
+    <small>Add the embed sources you want to use. Use <code>{ID}</code>, <code>{EP}</code> and <code>{TYPE}</code> (sub/dub) in the URL template. Only use sources you have the right to embed.</small>
+    <div class="plist" id="plist"></div>
+    <div class="form">
+      <label for="pName">Name</label>
+      <input type="text" id="pName" placeholder="e.g. My Provider">
+      <label for="pType">ID Type</label>
+      <select id="pType">
+        <option value="anilist">AniList ID ({ID})</option>
+        <option value="mal">MyAnimeList ID ({ID})</option>
+      </select>
+      <label for="pTpl">URL Template</label>
+      <input type="text" id="pTpl" placeholder="https://provider.example/embed/{ID}/{EP}/{TYPE}">
+      <div class="err" id="pErr"></div>
+      <div class="row" style="margin:0">
+        <button class="btn primary" id="pSave">Add provider</button>
+        <button class="btn hidden" id="pCancel">Cancel edit</button>
+        <span style="flex:1"></span>
+        <button class="btn" id="pClose">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js"></script>
+<script>
+/* ============ Helpers & storage ============ */
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? d; } catch { return d; } },
+  set(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+};
+const uid = () => Math.random().toString(36).slice(2, 10);
+const titleOf = a => a.title.english || a.title.romaji;
+const stripHtml = s => (s || 'No description.').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+const score = a => a.averageScore ? (a.averageScore / 10).toFixed(1) : null;
+const episodeCount = a => a.episodes || (a.nextAiringEpisode ? a.nextAiringEpisode.episode - 1 : 0);
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+/* ============ AniList GraphQL (id + idMal + relations) ============ */
+const API = 'https://graphql.anilist.co';
+const F = `id idMal title { romaji english } coverImage { large extraLarge } bannerImage description(asHtml:false)
+  episodes nextAiringEpisode { episode } seasonYear format averageScore genres
+  relations { edges { relationType node { id idMal title { english romaji } format seasonYear } } }`;
+const M = args => `media(type: ANIME, isAdult: false, ${args}) { ${F} }`;
+
+async function gql(query, variables = {}, token = '') {
+  const headers = { 'Content-Type': 'application/json', Accept: 'application/json' };
+  if (token) headers.Authorization = 'Bearer ' + token;      // authorized requests (mutations, Viewer)
+  const res = await fetch(API, { method: 'POST', headers, body: JSON.stringify({ query, variables }) });
+  if (!res.ok) throw new Error('AniList error ' + res.status);
+  const json = await res.json();
+  if (json.errors) throw new Error(json.errors[0].message);
+  return json.data;
+}
+const page = async (args, vars, per = 20, header = '') => (await gql(`query${header}{ Page(perPage:${per}) { ${M(args)} } }`, vars)).Page.media;
+function currentSeason() {   // AniList counts December as next year's WINTER
+  const d = new Date(), m = d.getMonth();
+  return { season: (m <= 1 || m === 11) ? 'WINTER' : m <= 4 ? 'SPRING' : m <= 7 ? 'SUMMER' : 'FALL', year: d.getFullYear() + (m === 11 ? 1 : 0) };
+}
+const qTrending = () => page('sort: TRENDING_DESC');
+const qSeason   = () => page('season:$season, seasonYear:$year, sort: POPULARITY_DESC', currentSeason(), 20, '($season:MediaSeason,$year:Int)');
+const qTop      = () => page('sort: SCORE_DESC');
+const qSearch   = s => page('search:$s, sort: SEARCH_MATCH', { s }, 36, '($s:String)');
+
+const mediaCache = new Map();
+async function getMedia(id) {
+  if (mediaCache.has(id)) return mediaCache.get(id);
+  const m = (await gql(`query($id:Int){ Media(id:$id, type:ANIME) { ${F} } }`, { id })).Media;
+  if (!m) throw new Error('Anime not found');
+  mediaCache.set(id, m); return m;
+}
+
+/* Build the ordered Season / Entry chain by following PREQUEL / SEQUEL relations */
+const CHAIN_FORMATS = ['TV', 'TV_SHORT', 'MOVIE', 'ONA', 'OVA'];
+async function buildChain(a) {
+  const rel = (m, type) => (m.relations?.edges || []).find(e => e.relationType === type && CHAIN_FORMATS.includes(e.node.format))?.node;
+  const seen = new Set([a.id]), back = [], fwd = [];
+  let cur = a, n = 0;
+  while (n++ < 15) { const p = rel(cur, 'PREQUEL'); if (!p || seen.has(p.id)) break; seen.add(p.id); cur = await getMedia(p.id); back.unshift(cur); }
+  cur = a; n = 0;
+  while (n++ < 15) { const s = rel(cur, 'SEQUEL'); if (!s || seen.has(s.id)) break; seen.add(s.id); cur = await getMedia(s.id); fwd.push(cur); }
+  return [...back, a, ...fwd];
+}
+
+/* ============ Providers (localStorage) ============ */
+let providers = store.get('anifin.providers', null);
+if (providers === null) {
+  providers = [];
+  const old = localStorage.getItem('embedTpl');
+  if (old) providers.push({ id: uid(), name: 'Default', idType: 'anilist', template: old });
+  store.set('anifin.providers', providers);
+}
+let providerId = store.get('anifin.provider', null);
+if (!providers.some(p => p.id === providerId)) providerId = providers[0]?.id || null;
+const getProvider = () => providers.find(p => p.id === providerId);
+const saveProviders = () => { store.set('anifin.providers', providers); store.set('anifin.provider', providerId); };
+
+/* ============ State ============ */
+const state = { anime: null, chain: [], ep: null, count: 0, tab: 0, lang: 'sub', mode: 'embed' };
+const BATCH = 100;               // episodes per pagination tab
+let routeToken = 0;
+
+/* ============ Watch history ============ */
+const getHistory = () => store.get('anifin.history', []);
+const seasonLabel = () => state.chain.length > 1 ? titleOf(state.anime) : '';
+function saveProgress() {
+  if (!state.anime || !state.ep) return;
+  const a = state.anime, root = state.chain[0] || a;
+  const entry = { animeId: a.id, title: titleOf(root), poster: a.coverImage.large, episode: state.ep, seasonTitle: seasonLabel(), timestamp: Date.now(), provider: providerId };
+  store.set('anifin.history', [entry, ...getHistory().filter(h => h.animeId !== a.id)].slice(0, 30));
+}
+function resume(h) {
+  if (providers.some(p => p.id === h.provider)) { providerId = h.provider; saveProviders(); renderProvSelect(); }
+  location.hash = `#watch/${h.animeId}/${h.episode}`;
+}
+
+/* ============ Home: cards, rows, hero ============ */
+function makeCard(a, onClick, extra) {
+  const c = el('div', 'card');
+  const img = el('img'); img.loading = 'lazy'; img.alt = ''; img.src = a.coverImage.large; c.appendChild(img);
+  if (score(a)) c.appendChild(el('span', 'badge', '★ ' + score(a)));
+  c.appendChild(el('p', '', titleOf(a)));
+  if (extra) c.appendChild(el('small', '', extra));
+  c.onclick = onClick;
+  return c;
+}
+const goWatch = (id, ep) => { location.hash = `#watch/${id}` + (ep ? '/' + ep : ''); };
+
+function buildRow(title, cards) {
+  const sec = el('section', 'row-sec'), head = el('div', 'row-head');
+  head.appendChild(el('h2', '', title));
+  const sc = el('div', 'scroller'); cards.forEach(c => sc.appendChild(c));
+  [['‹', -1], ['›', 1]].forEach(([t, d]) => { const b = el('button', 'btn', t); b.onclick = () => sc.scrollBy({ left: d * sc.clientWidth * .85, behavior: 'smooth' }); head.appendChild(b); });
+  sec.append(head, sc);
+  return sec;
+}
+
+function renderContinue() {
+  const box = $('contRow'); if (!box) return;
+  const hist = getHistory();
+  box.innerHTML = ''; box.classList.toggle('hidden', !hist.length);
+  if (!hist.length) return;
+  box.appendChild(buildRow('Continue Watching', hist.map(h => {
+    const extra = (h.seasonTitle && h.seasonTitle !== h.title ? h.seasonTitle + ' • ' : '') + 'Episode ' + h.episode;
+    const c = makeCard({ title: { romaji: h.title }, coverImage: { large: h.poster } }, () => resume(h), extra);
+    const rm = el('button', 'rm', '×'); rm.title = 'Remove';
+    rm.onclick = e => { e.stopPropagation(); store.set('anifin.history', getHistory().filter(x => x.animeId !== h.animeId)); renderContinue(); };
+    c.appendChild(rm); return c;
+  })));
+}
+
+let heroItems = [], heroIdx = 0, heroTimer;
+function showHero(i) {
+  heroIdx = i; const a = heroItems[i]; if (!a) return;
+  $('heroBg').style.backgroundImage = `url("${a.bannerImage || a.coverImage.extraLarge || a.coverImage.large}")`;
+  $('heroTitle').textContent = titleOf(a); $('heroDesc').textContent = stripHtml(a.description);
+  const t = $('heroTags'); t.innerHTML = '';
+  if (score(a)) t.appendChild(el('span', 'tag score', '★ ' + score(a)));
+  t.appendChild(el('span', 'tag hot', 'Trending #' + (i + 1)));
+  if (a.format) t.appendChild(el('span', 'tag', a.format));
+  if (a.seasonYear) t.appendChild(el('span', 'tag', a.seasonYear));
+  [...$('dots').children].forEach((d, j) => d.classList.toggle('on', j === i));
+}
+function setupHero(list) {
+  heroItems = list.filter(a => a.bannerImage).slice(0, 5);
+  if (!heroItems.length) heroItems = list.slice(0, 5);
+  $('dots').innerHTML = '';
+  heroItems.forEach((_, i) => { const d = el('i'); d.onclick = () => { showHero(i); restartHero(); }; $('dots').appendChild(d); });
+  showHero(0); restartHero();
+}
+function restartHero() { clearInterval(heroTimer); heroTimer = setInterval(() => { if (!$('homeView').classList.contains('hidden') && heroItems.length) showHero((heroIdx + 1) % heroItems.length); }, 9000); }
+$('heroWatch').onclick = () => heroItems[heroIdx] && goWatch(heroItems[heroIdx].id, 1);
+
+async function loadHome() {
+  const rows = $('rows'); rows.innerHTML = '';
+  const cont = el('div'); cont.id = 'contRow'; rows.appendChild(cont); renderContinue();
+  const defs = [['Trending Now', qTrending], ['Popular This Season', qSeason], ['Top Rated', qTop]];
+  const holders = defs.map(([t]) => { const h = el('div'); h.appendChild(el('div', 'status', 'Loading ' + t + '…')); rows.appendChild(h); return h; });
+  await Promise.all(defs.map(async ([title, fn], i) => {
+    try {
+      const list = await fn();
+      list.forEach(a => mediaCache.set(a.id, a));
+      if (i === 0) setupHero(list);
+      holders[i].innerHTML = '';
+      holders[i].appendChild(buildRow(title, list.map(a => makeCard(a, () => goWatch(a.id)))));
+    } catch (e) { holders[i].innerHTML = ''; holders[i].appendChild(el('div', 'status', `Failed to load ${title}: ${e.message}`)); }
+  }));
+}
+
+/* ============ Search ============ */
+let timer;
+$('search').addEventListener('input', e => {
+  clearTimeout(timer);
+  const q = e.target.value.trim();
+  if (!q) { $('searchPage').classList.add('hidden'); $('home').classList.remove('hidden'); renderContinue(); return; }
+  if (location.hash.startsWith('#watch')) location.hash = '#home';
+  timer = setTimeout(async () => {
+    $('home').classList.add('hidden'); $('searchPage').classList.remove('hidden');
+    $('filterBar').classList.add('hidden'); $('loadMore').classList.add('hidden'); listState.token++;
+    $('searchTitle').textContent = `Results for "${q}"`; $('searchStatus').textContent = 'Loading…'; $('searchGrid').innerHTML = '';
+    try {
+      const list = await qSearch(q);
+      list.forEach(a => mediaCache.set(a.id, a));
+      $('searchStatus').textContent = list.length ? '' : 'No results found.';
+      list.forEach(a => $('searchGrid').appendChild(makeCard(a, () => goWatch(a.id))));
+    } catch (err) { $('searchStatus').textContent = 'Search failed: ' + err.message; }
+  }, 400);
+});
+$('logo').onclick = () => { $('search').value = ''; $('searchPage').classList.add('hidden'); $('home').classList.remove('hidden'); location.hash = '#home'; window.scrollTo({ top: 0, behavior: 'smooth' }); };
+$('backBtn').onclick = () => { location.hash = '#home'; };
+
+/* ============ Router (hash-based SPA) ============ */
+function showView(v) {
+  const watch = v === 'watch';
+  if ($('watchView').classList.contains('hidden') !== !watch) window.scrollTo(0, 0);
+  $('homeView').classList.toggle('hidden', watch);
+  $('watchView').classList.toggle('hidden', !watch);
+  $('backBtn').classList.toggle('hidden', !watch);
+}
+function route() {
+  const m = location.hash.match(/^#watch\/(\d+)(?:\/(\d+))?/);
+  if (m) { showView('watch'); loadWatch(+m[1], m[2] ? +m[2] : null); }
+  else { leaveWatch(); showView('home'); renderContinue(); document.title = 'Zaku'; }
+}
+window.onhashchange = route;
+
+function leaveWatch() { routeToken++; stopAll(); state.anime = null; state.chain = []; state.ep = null; }
+
+/* ============ Watch page ============ */
+function tag(text, cls) { $('mMeta').appendChild(el('span', 'tag' + (cls ? ' ' + cls : ''), text)); }
+
+async function loadWatch(id, startEp) {
+  // Same entry already loaded (e.g. episode change in the hash) → just switch episode
+  if (state.anime && state.anime.id === id) { if (startEp) selectEpisode(startEp); return; }
+  const token = ++routeToken;
+  stopAll();
+  state.ep = null;
+  $('mTitle').textContent = 'Loading…'; $('mDesc').textContent = ''; $('mMeta').innerHTML = ''; $('eps').innerHTML = ''; $('tabs').innerHTML = '';
+  let a;
+  try { a = await getMedia(id); }
+  catch (e) { if (token === routeToken) { $('mTitle').textContent = 'Could not load this title'; $('mDesc').textContent = e.message; } return; }
+  if (token !== routeToken) return;
+
+  state.anime = a; state.count = episodeCount(a); state.tab = 0;
+  renderWatchHero(a);
+  document.title = titleOf(a) + ' – Zaku';
+  renderEpisodes(); updateNav();
+
+  // Season chain: reuse it if this entry is already part of it, otherwise (re)build
+  if (!state.chain.some(x => x.id === id)) {
+    state.chain = [a]; renderSeasons();
+    try { const chain = await buildChain(a); if (token !== routeToken) return; state.chain = chain; renderSeasons(); }
+    catch (e) { /* relations are optional – keep single entry */ }
+  } else renderSeasons();
+
+  if (startEp) selectEpisode(startEp); else playEmbed();
+}
+
+function renderWatchHero(a) {
+  $('wvBg').style.backgroundImage = `url("${a.bannerImage || a.coverImage.extraLarge || a.coverImage.large}")`;
+  $('mPoster').src = a.coverImage.extraLarge || a.coverImage.large;
+  $('mTitle').textContent = titleOf(a);
+  const d = $('mDesc'); d.textContent = stripHtml(a.description); d.classList.remove('open');
+  $('mMeta').innerHTML = '';
+  if (score(a)) tag('★ ' + score(a), 'score');
+  if (a.format) tag(a.format);
+  if (a.seasonYear) tag(a.seasonYear);
+  (a.genres || []).slice(0, 4).forEach(g => tag(g));
+  tag('AniList ID: ' + a.id, 'hot');
+  if (a.idMal) tag('MAL ID: ' + a.idMal, 'hot');
+  const n = state.count;
+  tag('Episodes: ' + (a.episodes ?? (n ? n + ' aired' : 'unknown')));
+}
+$('mDesc').onclick = e => e.currentTarget.classList.toggle('open');
+
+function renderSeasons() {
+  const sel = $('seasonSelect'); sel.innerHTML = '';
+  $('seasonBox').classList.toggle('hidden', state.chain.length < 2);
+  state.chain.forEach((m, i) => {
+    const o = new Option(`${i + 1}. ${titleOf(m)} (${m.format?.replace('_', ' ') || '?'}${m.seasonYear ? ', ' + m.seasonYear : ''})`, m.id);
+    sel.appendChild(o);
+  });
+  sel.value = state.anime?.id;
+}
+// Switching entries updates the hash, which re-renders the title, ID, episode count and grid
+$('seasonSelect').onchange = e => goWatch(+e.target.value, 1);
+
+/* Episode grid with batch tabs (1-100, 101-200, …) */
+function renderEpisodes() {
+  const n = state.count, tabs = $('tabs'), grid = $('eps');
+  tabs.innerHTML = ''; grid.innerHTML = '';
+  if (!n) { grid.textContent = 'No episode count available.'; return; }
+  const batches = Math.ceil(n / BATCH);
+  if (batches > 1) for (let t = 0; t < batches; t++) {
+    const lo = t * BATCH + 1, hi = Math.min(n, (t + 1) * BATCH);
+    const b = el('button', t === state.tab ? 'active' : '', `${lo}-${hi}`);
+    b.onclick = () => { state.tab = t; renderEpisodes(); };
+    tabs.appendChild(b);
+  }
+  const lo = state.tab * BATCH + 1, hi = Math.min(n, (state.tab + 1) * BATCH);
+  for (let i = lo; i <= hi; i++) {
+    const b = el('button', i === state.ep ? 'active' : '', i);
+    b.onclick = () => selectEpisode(i);
+    grid.appendChild(b);
+  }
+}
+
+function selectEpisode(n) {
+  if (!state.anime || n < 1 || n > state.count) return;
+  state.ep = n; state.tab = Math.floor((n - 1) / BATCH);
+  renderEpisodes(); updateNav(); playEmbed(); saveProgress(); syncAniList(state.anime, n);
+  history.replaceState(null, '', `#watch/${state.anime.id}/${n}`);   // shareable/reload-safe, no re-route
+}
+function updateNav() {
+  $('prevBtn').disabled = !(state.ep && state.ep > 1);
+  $('nextBtn').disabled = !(state.ep && state.ep < state.count);
+  const p = getProvider(), np = $('nowPlaying'); np.innerHTML = '';
+  if (!state.ep) np.textContent = 'No episode selected';
+  else { np.append('Now playing: '); np.appendChild(el('b', '', 'Episode ' + state.ep)); np.append(` • ${state.lang.toUpperCase()}${p ? ' • ' + p.name : ''}`); }
+}
+$('prevBtn').onclick = () => selectEpisode(state.ep - 1);
+$('nextBtn').onclick = () => selectEpisode(state.ep + 1);
+
+/* ============ Embed player (provider-driven) ============ */
+function renderProvSelect() {
+  const s = $('provSelect'); s.innerHTML = '';
+  if (!providers.length) { s.appendChild(new Option('No providers – add one', '')); s.disabled = true; return; }
+  s.disabled = false;
+  providers.forEach(p => s.appendChild(new Option(p.name + (p.idType === 'mal' ? ' (MAL)' : ''), p.id)));
+  s.value = providerId;
+}
+$('provSelect').onchange = e => { providerId = e.target.value; saveProviders(); updateNav(); playEmbed(); saveProgress(); };
+
+// Returns { url } or { error }; supplies the AniList or MAL ID of the ACTIVE entry
+function buildEmbed() {
+  const p = getProvider(), a = state.anime;
+  if (!p) return { error: 'Add an embed provider in Settings to enable the player.' };
+  if (!a || !state.ep) return { error: 'Select an episode to start watching.' };
+  const id = p.idType === 'mal' ? a.idMal : a.id;
+  if (!id) return { error: `"${p.name}" needs a MyAnimeList ID, but this title has none. Try another provider.` };
+  return { url: p.template.replace(/\{ID\}/g, id).replace(/\{EP\}/g, state.ep).replace(/\{TYPE\}/g, state.lang) };
+}
+function playEmbed() {
+  if (state.mode !== 'embed') return;
+  const r = buildEmbed(), f = $('frame');
+  if (r.error) { f.classList.add('hidden'); f.removeAttribute('src'); $('placeholder').classList.remove('hidden'); $('placeholder').textContent = r.error; return; }
+  $('placeholder').classList.add('hidden'); f.classList.remove('hidden'); f.src = r.url;
+}
+function setLang(l) { state.lang = l; $('subBtn').classList.toggle('active', l === 'sub'); $('dubBtn').classList.toggle('active', l === 'dub'); updateNav(); playEmbed(); }
+$('subBtn').onclick = () => setLang('sub');
+$('dubBtn').onclick = () => setLang('dub');
+
+/* ============ HLS fallback ============ */
+let hls = null;
+/** Play a direct .m3u8 URL in the <video> element using HLS.js (native HLS on Safari). */
+function playDirectStream(streamUrl) {
+  const video = $('video');
+  if (hls) { hls.destroy(); hls = null; }
+  $('placeholder').classList.add('hidden');
+  if (window.Hls && Hls.isSupported()) {
+    hls = new Hls(); hls.loadSource(streamUrl); hls.attachMedia(video);
+    hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => {}));
+    hls.on(Hls.Events.ERROR, (_, d) => { if (d.fatal) { $('placeholder').classList.remove('hidden'); $('placeholder').textContent = 'Stream error: ' + d.type + ' (check URL / CORS).'; } });
+  } else if (video.canPlayType('application/vnd.apple.mpegurl')) { video.src = streamUrl; video.play().catch(() => {}); }
+  else { $('placeholder').classList.remove('hidden'); $('placeholder').textContent = 'HLS is not supported in this browser.'; }
+}
+$('m3u8Play').onclick = () => { const u = $('m3u8Input').value.trim(); if (u) playDirectStream(u); };
+$('m3u8Input').addEventListener('keydown', e => { if (e.key === 'Enter') $('m3u8Play').click(); });
+
+function stopAll() {
+  $('frame').removeAttribute('src'); $('frame').classList.add('hidden');
+  const v = $('video'); v.pause(); v.removeAttribute('src'); v.load();
+  if (hls) { hls.destroy(); hls = null; }
+  $('placeholder').classList.remove('hidden'); $('placeholder').textContent = 'Select an episode to start watching.';
+}
+function setMode(m) {
+  state.mode = m; stopAll();
+  $('modeEmbed').classList.toggle('active', m === 'embed'); $('modeHls').classList.toggle('active', m === 'hls');
+  $('hlsSettings').classList.toggle('hidden', m !== 'hls');
+  $('embedTools').style.display = m === 'embed' ? 'contents' : 'none';
+  $('langSeg').classList.toggle('hidden', m !== 'embed');
+  $('video').style.display = m === 'hls' ? 'block' : 'none';
+  if (m === 'embed') playEmbed(); else $('placeholder').textContent = 'Paste a direct .m3u8 URL below and press Play.';
+}
+$('modeEmbed').onclick = () => setMode('embed');
+$('modeHls').onclick = () => setMode('hls');
+
+/* ============ Settings: add / edit / delete providers ============ */
+let editingId = null;
+const openSettings = () => { renderProvList(); renderAl(); $('settings').classList.add('open'); };
+const closeSettings = () => { resetForm(); $('settings').classList.remove('open'); };
+$('openSettings').onclick = openSettings; $('manageProv').onclick = openSettings; $('pClose').onclick = closeSettings;
+$('settings').addEventListener('click', e => { if (e.target === $('settings')) closeSettings(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('settings').classList.contains('open')) closeSettings(); });
+
+function resetForm() { editingId = null; $('pName').value = ''; $('pTpl').value = ''; $('pType').value = 'anilist'; $('pErr').textContent = ''; $('pSave').textContent = 'Add provider'; $('pCancel').classList.add('hidden'); }
+$('pCancel').onclick = resetForm;
+
+function renderProvList() {
+  const box = $('plist'); box.innerHTML = '';
+  if (!providers.length) box.appendChild(el('div', 'status', 'No providers yet. Add one below.'));
+  providers.forEach(p => {
+    const row = el('div', 'prov'), info = el('div');
+    info.appendChild(el('b', '', p.name));
+    info.appendChild(el('small', '', (p.idType === 'mal' ? 'MyAnimeList ID' : 'AniList ID') + ' • ' + p.template));
+    const edit = el('button', 'btn', 'Edit'), del = el('button', 'btn', 'Delete');
+    edit.onclick = () => { editingId = p.id; $('pName').value = p.name; $('pType').value = p.idType; $('pTpl').value = p.template; $('pSave').textContent = 'Save changes'; $('pCancel').classList.remove('hidden'); $('pErr').textContent = ''; };
+    del.onclick = () => {
+      if (!confirm(`Delete "${p.name}"?`)) return;
+      providers = providers.filter(x => x.id !== p.id);
+      if (providerId === p.id) providerId = providers[0]?.id || null;
+      saveProviders(); renderProvSelect(); renderProvList(); if (editingId === p.id) resetForm();
+      if (state.anime) { updateNav(); playEmbed(); }
+    };
+    row.append(info, edit, del); box.appendChild(row);
+  });
+}
+
+$('pSave').onclick = () => {
+  const name = $('pName').value.trim(), idType = $('pType').value, template = $('pTpl').value.trim();
+  if (!name) return $('pErr').textContent = 'Give the provider a name.';
+  if (!/^https?:\/\//i.test(template)) return $('pErr').textContent = 'Template must start with http:// or https://';
+  if (!template.includes('{ID}')) return $('pErr').textContent = 'Template must contain {ID}.';
+  const wasEmpty = !providers.length;
+  let changedId;
+  if (editingId) { Object.assign(providers.find(p => p.id === editingId), { name, idType, template }); changedId = editingId; }
+  else { changedId = uid(); providers.push({ id: changedId, name, idType, template }); }
+  if (!providerId) providerId = changedId;
+  saveProviders(); renderProvSelect(); resetForm(); renderProvList();
+  // First provider added (or active one edited) while watching → start episode 1 / reload current episode
+  if (state.anime && (wasEmpty || changedId === providerId)) { updateNav(); selectEpisode(state.ep || 1); }
+};
+
+/* ============ Toasts ============ */
+function toast(msg, kind) {
+  const t = el('div', 'toast' + (kind ? ' ' + kind : ''), msg);
+  $('toasts').appendChild(t);
+  setTimeout(() => t.classList.add('out'), 2800);
+  setTimeout(() => t.remove(), 3300);
+}
+
+/* ============ AniList integration (token + progress sync) ============ */
+const AL_KEY = 'anilist_token', AL_USER = 'anilist_user';
+const alToken = () => localStorage.getItem(AL_KEY) || '';
+const al = { status: alToken() ? 'ok' : 'off', name: localStorage.getItem(AL_USER) || '' };
+const SAVE_MUTATION = `mutation($mediaId:Int,$progress:Int,$status:MediaListStatus){
+  SaveMediaListEntry(mediaId:$mediaId, progress:$progress, status:$status) { id progress status } }`;
+
+function renderAl() {
+  const label = al.status === 'bad' ? '● Token error' : '● AniList' + (al.name ? ': ' + al.name : '');
+  const b = $('alBadge');
+  b.textContent = label; b.className = 'albadge ' + (al.status === 'bad' ? 'bad' : 'ok') + (al.status === 'off' ? ' hidden' : '');
+  const s = $('alStatus');
+  s.textContent = al.status === 'off' ? 'Not connected' : al.status === 'bad' ? 'Token error' : 'Connected' + (al.name ? ' as ' + al.name : '');
+  s.className = 'albadge' + (al.status === 'off' ? '' : al.status === 'bad' ? ' bad' : ' ok');
+  $('alDisconnect').classList.toggle('hidden', al.status === 'off');
+  $('alConnect').textContent = al.status === 'off' ? 'Connect' : 'Replace token';
+}
+const isAuthError = e => /invalid|token|unauthor|authent/i.test(e.message);
+
+async function connectAl() {
+  const token = $('alTokenInput').value.trim();
+  if (!token) return $('alErr').textContent = 'Paste your AniList access token first.';
+  $('alErr').textContent = 'Checking…';
+  try {
+    const { Viewer } = await gql('query{ Viewer { id name } }', {}, token);
+    localStorage.setItem(AL_KEY, token); localStorage.setItem(AL_USER, Viewer.name);
+    Object.assign(al, { status: 'ok', name: Viewer.name });
+    $('alTokenInput').value = ''; $('alErr').textContent = '';
+    renderAl(); toast('Connected to AniList as ' + Viewer.name);
+  } catch (e) { $('alErr').textContent = 'Could not verify token: ' + e.message; }
+}
+function disconnectAl() {
+  localStorage.removeItem(AL_KEY); localStorage.removeItem(AL_USER);
+  Object.assign(al, { status: 'off', name: '' }); lastSynced = ''; renderAl(); toast('Disconnected from AniList');
+}
+$('alConnect').onclick = connectAl; $('alDisconnect').onclick = disconnectAl;
+$('alTokenInput').addEventListener('keydown', e => { if (e.key === 'Enter') connectAl(); });
+$('alBadge').onclick = openSettings;
+
+// Fires on episode selection; debounced so skimming through episodes sends one request
+let syncTimer, lastSynced = '';
+function syncAniList(a, ep) {
+  const token = alToken();
+  if (!token || !a || !ep) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(async () => {
+    const key = a.id + ':' + ep;
+    if (key === lastSynced) return;
+    try {
+      await gql(SAVE_MUTATION, { mediaId: a.id, progress: ep, status: 'CURRENT' }, token);
+      lastSynced = key; toast(`Synced Ep ${ep} to AniList!`);
+    } catch (e) {
+      if (isAuthError(e)) { al.status = 'bad'; renderAl(); }
+      toast('AniList sync failed: ' + e.message, 'err');
+    }
+  }, 800);
+}
+
+/* ============ List pages (footer links, genres, browse, A-Z) ============ */
+const GENRES = ['Action', 'Adventure', 'Comedy', 'Drama', 'Ecchi', 'Fantasy', 'Horror', 'Mahou Shoujo', 'Mecha', 'Music', 'Mystery', 'Psychological', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports', 'Supernatural', 'Thriller'];
+GENRES.forEach(g => $('fGenre').appendChild(new Option(g, g)));
+const listState = { args: '', page: 1, token: 0 };
+
+// Switch to the home view's results area and reset it
+function prepareList(title, filters) {
+  if (location.hash.startsWith('#watch')) location.hash = '#home';
+  showView('home');
+  $('search').value = '';
+  $('home').classList.add('hidden'); $('searchPage').classList.remove('hidden');
+  $('filterBar').classList.toggle('hidden', !filters);
+  $('searchTitle').textContent = title; $('searchStatus').textContent = ''; $('searchGrid').innerHTML = '';
+  $('loadMore').classList.add('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  return ++listState.token;
+}
+function openList(title, args, filters) {
+  prepareList(title, filters);
+  Object.assign(listState, { args, page: 1 });
+  loadListPage();
+}
+async function loadListPage() {
+  const tk = listState.token, p = listState.page;
+  $('searchStatus').textContent = 'Loading…'; $('loadMore').classList.add('hidden');
+  try {
+    const d = await gql(`query($p:Int){ Page(page:$p, perPage:36) { pageInfo { hasNextPage } ${M(listState.args)} } }`, { p });
+    if (tk !== listState.token) return;                       // a newer list/search replaced this one
+    d.Page.media.forEach(a => { mediaCache.set(a.id, a); $('searchGrid').appendChild(makeCard(a, () => goWatch(a.id))); });
+    $('searchStatus').textContent = $('searchGrid').children.length ? '' : 'No results found.';
+    $('loadMore').classList.toggle('hidden', !d.Page.pageInfo.hasNextPage);
+  } catch (e) { if (tk === listState.token) $('searchStatus').textContent = 'Failed to load: ' + e.message; }
+}
+$('loadMore').onclick = () => { listState.page++; loadListPage(); };
+
+// Browse with Filters
+function filterArgs() {
+  const fmt = $('fFormat').value, g = $('fGenre').value, st = $('fStatus').value, yr = parseInt($('fYear').value, 10);
+  const a = ['sort: ' + $('fSort').value];
+  if (fmt) a.push('format: ' + fmt);
+  if (g) a.push('genre: ' + JSON.stringify(g));
+  if (st) a.push('status: ' + st);
+  if (yr >= 1940 && yr <= 2100) a.push('seasonYear: ' + yr);
+  return a.join(', ');
+}
+['fFormat', 'fGenre', 'fStatus', 'fSort', 'fYear'].forEach(id => $(id).addEventListener('change', () => {
+  listState.token++; Object.assign(listState, { args: filterArgs(), page: 1 }); $('searchGrid').innerHTML = ''; loadListPage();
+}));
+
+// My Anime List = saved watch history
+function showMyList() {
+  prepareList('My Anime List', false);
+  const hist = getHistory();
+  $('searchStatus').textContent = hist.length ? '' : 'Nothing here yet. Episodes you watch are saved automatically.';
+  hist.forEach(h => {
+    const extra = (h.seasonTitle && h.seasonTitle !== h.title ? h.seasonTitle + ' • ' : '') + 'Episode ' + h.episode;
+    $('searchGrid').appendChild(makeCard({ title: { romaji: h.title }, coverImage: { large: h.poster } }, () => resume(h), extra));
+  });
+}
+
+// Random Pick: random entry from the high-rated, well-known pool
+async function randomPick() {
+  toast('Picking something good…');
+  const pool = 'averageScore_greater: 75, popularity_greater: 20000, sort: SCORE_DESC';
+  const fetchAt = async p => (await gql(`query($p:Int){ Page(page:$p, perPage:1) { ${M(pool)} } }`, { p })).Page.media[0];
+  try {
+    const t = await gql(`query{ Page(perPage:1) { pageInfo { total } ${M(pool)} } }`);
+    const total = Math.min(t.Page.pageInfo.total || 1, 1000);
+    const a = (await fetchAt(1 + Math.floor(Math.random() * total))) || (await fetchAt(1 + Math.floor(Math.random() * 50)));
+    if (!a) throw new Error('No result');
+    mediaCache.set(a.id, a); goWatch(a.id);
+  } catch (e) { toast('Random pick failed: ' + e.message, 'err'); }
+}
+
+/* ============ Footer actions ============ */
+const POP = 'sort: POPULARITY_DESC';
+const ACTIONS = {
+  all:       () => openList('All Series', 'format_in: [TV, TV_SHORT], ' + POP),
+  movies:    () => openList('Movies', 'format: MOVIE, ' + POP),
+  browse:    () => { ['fFormat', 'fGenre', 'fStatus', 'fYear'].forEach(id => $(id).value = ''); $('fSort').value = 'POPULARITY_DESC'; openList('Browse', filterArgs(), true); },
+  airing:    () => openList('Top Airing', 'status: RELEASING, ' + POP),
+  popular:   () => openList('Most Popular', POP),
+  completed: () => openList('Completed', 'status: FINISHED, ' + POP),
+  random:    randomPick,
+  mylist:    showMyList,
+  az:        () => openList('A-Z Index', 'sort: TITLE_ROMAJI')
+};
+document.querySelectorAll('[data-act]').forEach(b => b.onclick = ACTIONS[b.dataset.act]);
+document.querySelectorAll('[data-genre]').forEach(b => b.onclick = () => openList(b.dataset.genre, `genre: ${JSON.stringify(b.dataset.genre)}, ${POP}`));
+document.querySelectorAll('[data-tag]').forEach(b => b.onclick = () => openList(b.dataset.tag, `tag: ${JSON.stringify(b.dataset.tag)}, ${POP}`));   // Isekai is an AniList tag, not a genre
+$('flogo').onclick = () => $('logo').onclick();
+
+/* ============ Init ============ */
+renderProvSelect();
+renderAl();
+if (alToken()) {   // silently re-check a saved token so the badge reflects reality
+  gql('query{ Viewer { name } }', {}, alToken())
+    .then(d => { Object.assign(al, { status: 'ok', name: d.Viewer.name }); localStorage.setItem(AL_USER, d.Viewer.name); renderAl(); })
+    .catch(e => { if (!(e instanceof TypeError)) { al.status = 'bad'; renderAl(); } });
+}
+loadHome();
+route();      // honour a deep link like #watch/159042 on first load
+</script>
+</body>
+</html>

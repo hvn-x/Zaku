@@ -1,1 +1,1 @@
-Uhhhhh cool readme right?
+<img src="/assets/ZakuBanner.png"/>

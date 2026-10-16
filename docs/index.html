@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Zaku</title>
+<title>Anime-X</title>
 <link rel="icon" type="image/x-icon" href="Zaku.ico">
 <link rel="icon" type="image/svg+xml" href="Zaku.svg">
 <style>
   /* ============ Theme tokens (Fin-X: frosted glass, crimson main, amber accent) ============ */
   :root {
     --bg:#0f0f12; --main:#8a1a1a; --main-hi:#a82323; --accent:#E8A33D;
-    --text:#f2eeea; --muted:#a39d98;
+    --text:#f2eeea; --muted:#a39d98; --crimson:#ff4b4b; --gold:#f9d423;
     --glass:rgba(255,255,255,.05); --glass-hi:rgba(255,255,255,.10); --glass-border:rgba(255,255,255,.10);
     --blur:blur(18px) saturate(140%); --radius:14px;
     --bar:linear-gradient(180deg,var(--accent),var(--main));
@@ -96,13 +96,13 @@
   .wv-info p { margin:0; color:#d8d1cb; line-height:1.6; font-size:.92rem; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; cursor:pointer; }
   .wv-info p.open { -webkit-line-clamp:unset; max-height:200px; overflow:auto; display:block; }
   .watch { display:grid; grid-template-columns:minmax(0,1fr); gap:24px; align-items:start; padding:0 var(--gutter); position:relative; z-index:3; }
-  @media (min-width:1100px) { .watch { grid-template-columns:minmax(0,1fr) clamp(340px,28vw,460px); } }
+  @media (min-width:1100px) { .watch { grid-template-columns:minmax(0,1fr) clamp(360px,30vw,500px); } }
   .side { padding:20px; border-radius:18px; background:rgba(255,255,255,.04); border:1px solid var(--glass-border); backdrop-filter:var(--blur); -webkit-backdrop-filter:var(--blur); }
   .label { margin:0 0 8px; font-size:.78rem; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); font-weight:700; }
   .side .label:not(:first-child) { margin-top:18px; }
   .tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
   .tabs button { padding:6px 11px; font-size:.8rem; }
-  .eps { display:grid; grid-template-columns:repeat(auto-fill,minmax(52px,1fr)); gap:8px; max-height:min(46vh,420px); overflow:auto; padding:2px; }
+  .eps { display:grid; grid-template-columns:repeat(auto-fill,minmax(52px,1fr)); gap:8px; max-height:264px; scrollbar-width:thin; overflow:auto; padding:2px; }
   .eps button { padding:9px 0; }
   .toolbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:14px 0; }
   .toolbar .sep { flex:1; }
@@ -120,7 +120,7 @@
   .overlay { position:fixed; inset:0; z-index:20; display:none; overflow-y:auto; overscroll-behavior:contain; background:rgba(8,8,10,.92); }   /* no backdrop-filter here: blurring the page (and video) on every scroll frame is what made it laggy */
   .overlay.open { display:block; animation:fade .2s ease; }
   @keyframes fade { from { opacity:0 } to { opacity:1 } }
-  .dialog { max-width:720px; margin:6vh auto; padding:24px; border-radius:20px; background:#1c1c22; border:1px solid var(--glass-border); box-shadow:0 20px 50px rgba(0,0,0,.5); }
+  .dialog { max-width:860px; margin:6vh auto; padding:24px; border-radius:20px; background:#1c1c22; border:1px solid var(--glass-border); box-shadow:0 20px 50px rgba(0,0,0,.5); }
   .dialog h3 { margin:0 0 4px; font-size:1.3rem; }
   .plist { display:grid; gap:8px; margin:16px 0; }
   .prov { display:flex; gap:12px; align-items:center; padding:12px 14px; border-radius:12px; background:var(--glass); border:1px solid var(--glass-border); }
@@ -230,25 +230,84 @@
   .box > label { font-size:.78rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); font-weight:700; }
   #alBox { margin-bottom:16px; }
 
-  /* ============ Sidebar fills the height of the player column + recommendations ============ */
-  .recs-box { margin-top:18px; display:flex; flex-direction:column; min-height:0; }
-  .recs { display:grid; gap:8px; align-content:start; overflow:auto; scrollbar-width:thin; max-height:420px; padding:2px; }
-  .rec { display:flex; align-items:center; gap:12px; padding:8px; border-radius:12px; background:var(--glass); border:1px solid var(--glass-border); cursor:pointer; transition:border-color .15s, background .15s; }
-  .rec:hover { border-color:var(--accent); background:var(--glass-hi); }
-  .rec img { width:42px; height:58px; object-fit:cover; border-radius:8px; background:#111; flex:none; }
-  .rec .t { min-width:0; }
-  .rec .t b { display:block; font-size:.88rem; line-height:1.3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .rec .t small { font-size:.75rem; }
-  @media (min-width:1100px) {
-    .sidewrap { position:relative; min-height:480px; }
-    .side { position:absolute; inset:0; display:flex; flex-direction:column; min-height:0; overflow:hidden; }
-    .side .eps { flex:0 1 auto; max-height:46%; min-height:96px; }
-    .side.norecs .eps { flex:1; max-height:none; }
-    .recs-box { flex:1; }
-    .recs { flex:1; min-height:0; max-height:none; }
-  }
+  /* ============ Sidebar (grows with its content) + recommendations ============ */
+  .side { padding:22px; }
+  .eps { padding:4px; }
+  .recs-box { margin-top:22px; padding-top:18px; border-top:1px solid var(--glass-border); }
+  .recs { display:flex; flex-direction:column; gap:14px; }
+  .rec { display:flex; align-items:stretch; gap:16px; padding:14px; border-radius:16px; cursor:pointer;
+    background:linear-gradient(135deg,rgba(255,75,75,.08),rgba(255,255,255,.02) 60%); border:1px solid var(--glass-border); transition:border-color .15s, transform .15s, box-shadow .15s; }
+  .rec:hover { border-color:var(--gold); transform:translateY(-2px); box-shadow:0 10px 26px rgba(255,75,75,.18); }
+  .rec img { width:84px; height:120px; object-fit:cover; border-radius:10px; background:#111; flex:none; box-shadow:0 6px 18px rgba(0,0,0,.5); }
+  .rec .t { min-width:0; display:flex; flex-direction:column; gap:8px; justify-content:center; }
+  .rec .t b { font-size:.95rem; line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .rec .badges, .rec .genres { display:flex; flex-wrap:wrap; gap:6px; }
+  .rb { padding:3px 10px; border-radius:999px; font-size:.7rem; font-weight:700; background:rgba(255,255,255,.08); color:#d8d1cb; }
+  .rb.score { background:var(--gold); color:#1a1500; }
+  .rb.fmt { background:rgba(255,75,75,.18); color:var(--crimson); }
+  .rb.gen { background:transparent; border:1px solid var(--glass-border); color:var(--muted); font-weight:600; }
+  @media (max-width:520px) { .rec img { width:64px; height:92px; } }
 
-  /* ============ Ad-blocker banner ============ */
+  /* ============ Unified player control bar ============ */
+  .ctrlbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px 18px; margin:14px 0; padding:10px 14px; border-radius:16px;
+    background:linear-gradient(135deg,rgba(255,75,75,.09),rgba(249,212,35,.04)); border:1px solid var(--glass-border); }
+  .cgroup { display:flex; flex-wrap:wrap; align-items:center; gap:10px; min-width:0; }
+  .cgroup.cr { margin-left:auto; }
+  .ctrlbar .seg { gap:2px; }
+  .ctrlbar .seg .btn { border:1px solid transparent; }
+  .ctrlbar .btn:hover { background:rgba(255,75,75,.24); border-color:var(--crimson); color:#fff; }
+  .ctrlbar .seg .btn.active { background:linear-gradient(135deg,rgba(255,75,75,.5),rgba(138,26,26,.7))!important; border-color:var(--gold)!important; color:#fff!important; box-shadow:0 0 12px rgba(249,212,35,.25)!important; }
+  .ctrlbar .dd { min-width:170px; }
+  .ctrlbar .dd-btn:hover, .ctrlbar .dd.open .dd-btn { border-color:var(--gold); background:rgba(249,212,35,.07); }
+  .ctrlbar .iconbtn { border-color:var(--glass-border); }
+  .ctrlbar #starProv.active { background:rgba(249,212,35,.14)!important; border-color:var(--gold)!important; color:var(--gold)!important; box-shadow:0 0 14px rgba(249,212,35,.35)!important; }
+  .ctrlbar .btn:disabled { opacity:.35; }
+  @media (max-width:700px) { .cgroup.cr { margin-left:0; } }
+
+  /* ============ Settings: tabs ============ */
+  .dhead { display:flex; align-items:center; margin-bottom:14px; }
+  .dhead h3 { flex:1; margin:0; }
+  .stabs { display:flex; gap:6px; flex-wrap:wrap; padding:5px; margin-bottom:16px; border-radius:14px; background:rgba(0,0,0,.35); border:1px solid var(--glass-border); }
+  .stab { flex:1 1 auto; background:none; border:1px solid transparent; color:var(--muted); font:inherit; font-weight:700; font-size:.88rem; padding:10px 14px; border-radius:10px; cursor:pointer; transition:background .15s, color .15s, border-color .15s; }
+  .stab:hover { color:#fff; background:rgba(255,75,75,.14); }
+  .stab.active { color:#fff; background:linear-gradient(135deg,rgba(255,75,75,.38),rgba(138,26,26,.6)); border-color:var(--gold); box-shadow:0 0 14px rgba(249,212,35,.2); }
+  .spanel > .box:first-child { margin-top:0; }
+  .dfoot { display:flex; justify-content:flex-end; margin-top:18px; padding-top:14px; border-top:1px solid var(--glass-border); }
+
+  /* ============ Settings: source cards (site vs yours, alternating accents, glowing default/active) ============ */
+  .plist .label { margin:12px 0 0; }
+  .plist .label.site { color:var(--gold); } .plist .label.you { color:var(--crimson); }
+  .plist .prov { position:relative; flex-wrap:wrap; padding:14px 16px 14px 18px; border-radius:14px; border:1px solid var(--glass-border); border-left:4px solid var(--crimson);
+    background:linear-gradient(135deg,rgba(255,75,75,.14),rgba(255,255,255,.015) 65%),#16161b; transition:box-shadow .2s, border-color .2s; }
+  .plist .prov.alt { border-left-color:var(--gold); background:linear-gradient(135deg,rgba(249,212,35,.12),rgba(255,255,255,.015) 65%),#16161b; }
+  .plist .prov > div:first-child { flex:1 1 220px; min-width:0; }
+  .plist .prov.isdef { border-top-color:var(--gold); border-right-color:var(--gold); border-bottom-color:var(--gold); box-shadow:0 0 0 1px rgba(249,212,35,.5), 0 0 22px rgba(249,212,35,.28); }
+  .plist .prov.current { border-top-color:var(--crimson); border-right-color:var(--crimson); border-bottom-color:var(--crimson); box-shadow:0 0 0 1px rgba(255,75,75,.5), 0 0 22px rgba(255,75,75,.3); }
+  .plist .prov.isdef.current { border-top-color:var(--gold); border-right-color:var(--gold); border-bottom-color:var(--gold); box-shadow:0 0 0 1px rgba(249,212,35,.55), 0 0 20px rgba(249,212,35,.25), 0 0 32px rgba(255,75,75,.28); }
+  .pb { margin-left:8px; font-size:.66rem; font-weight:800; letter-spacing:.04em; padding:2px 8px; border-radius:999px; background:rgba(255,255,255,.08); color:var(--muted); vertical-align:middle; }
+  .pb.site { background:rgba(249,212,35,.14); color:var(--gold); }
+  .pb.you { background:rgba(255,75,75,.16); color:var(--crimson); }
+  .pb.def { background:rgba(249,212,35,.2); color:var(--gold); box-shadow:0 0 10px rgba(249,212,35,.4); }
+  .pb.cur { background:rgba(255,75,75,.22); color:var(--crimson); box-shadow:0 0 10px rgba(255,75,75,.4); }
+  .plist .prov .btn:hover { border-color:var(--gold); background:rgba(249,212,35,.1); }
+  .plist .prov .btn.active { border-color:var(--gold)!important; background:rgba(249,212,35,.16)!important; color:var(--gold)!important; box-shadow:none!important; }
+
+  /* ============ Template test panel ============ */
+  .plist .prov .ptest { flex:1 1 100%; }
+  .ptest { margin-top:6px; padding:14px; border-radius:12px; background:rgba(0,0,0,.35); border:1px solid var(--glass-border); display:grid; gap:10px; font-size:.84rem; }
+  .ptest .pnote { color:var(--muted); }
+  .purl { padding:10px 12px; border-radius:10px; background:#0d0d11; border:1px solid var(--glass-border); font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.8rem; line-height:1.6; word-break:break-all; }
+  .purl .ps-id { color:#1a1500; background:var(--gold); border-radius:4px; padding:0 4px; font-weight:700; }
+  .purl .ps-ep { color:#fff; background:var(--crimson); border-radius:4px; padding:0 4px; font-weight:700; }
+  .purl .ps-type { color:#fff; background:#7b5cff; border-radius:4px; padding:0 4px; font-weight:700; }
+  .purl .ps-bad { color:#fff; background:#b3261e; border-radius:4px; padding:0 4px; text-decoration:underline wavy; }
+  .pchips { display:flex; flex-wrap:wrap; gap:8px; }
+  .pchips span { padding:3px 10px; border-radius:999px; background:rgba(255,255,255,.07); font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.74rem; }
+  .pchecks { list-style:none; margin:0; padding:0; display:grid; gap:4px; }
+  .pchecks .c-ok { color:#7ee2a0; } .pchecks .c-warn { color:var(--gold); } .pchecks .c-fail { color:#ff8a8a; }
+  .pactions { display:flex; gap:8px; flex-wrap:wrap; }
+
+  /* ============ Ad-blocker banner ============ */  /* ============ Ad-blocker banner ============ */
   .adbanner { position:fixed; left:50%; bottom:18px; transform:translateX(-50%); z-index:40; width:min(960px,calc(100vw - 28px)); display:flex; align-items:center; gap:14px; padding:14px 16px; border-radius:16px;
     background:rgba(24,24,30,.94); border:1px solid var(--accent); box-shadow:0 18px 50px rgba(0,0,0,.65); backdrop-filter:var(--blur); -webkit-backdrop-filter:var(--blur); animation:rise .3s ease; }
   .adbanner .shield { font-size:1.6rem; }
@@ -345,22 +404,27 @@
           <iframe id="frame" class="hidden" allowfullscreen allow="autoplay; fullscreen; encrypted-media"></iframe>
           <video id="video" controls playsinline></video>
         </div>
-        <div class="toolbar">
-          <div class="seg">
-            <button class="btn active" id="modeEmbed">Embed Player</button>
-            <button class="btn" id="modeHls">Custom HLS Player</button>
+        <div class="ctrlbar">
+          <div class="cgroup">
+            <div class="seg">
+              <button class="btn active" id="modeEmbed">Embed Player</button>
+              <button class="btn" id="modeHls">Custom HLS Player</button>
+            </div>
+            <span id="embedTools" style="display:contents">
+              <select id="provSelect" title="Source"></select>
+              <button class="btn iconbtn" id="starProv" title="Set this source as your default">&#9734;</button>
+              <button class="btn iconbtn" id="manageProv" title="Manage sources">&#9881;</button>
+            </span>
           </div>
-          <span id="embedTools" style="display:contents">
-            <select id="provSelect" title="Provider"></select>
-            <button class="btn iconbtn" id="starProv" title="Set this source as your default">&#9734;</button>
-            <button class="btn iconbtn" id="manageProv" title="Manage providers">&#9881;</button>
-          </span>
-          <button class="btn" id="prevBtn" disabled>&laquo; Prev</button>
-          <button class="btn" id="nextBtn" disabled>Next &raquo;</button>
-          <span class="sep"></span>
-          <div class="seg" id="langSeg">
-            <button class="btn active" id="subBtn">Sub</button>
-            <button class="btn" id="dubBtn">Dub</button>
+          <div class="cgroup cr">
+            <div class="seg">
+              <button class="btn" id="prevBtn" disabled>&laquo; Prev Episode</button>
+              <button class="btn" id="nextBtn" disabled>Next Episode &raquo;</button>
+            </div>
+            <div class="seg" id="langSeg">
+              <button class="btn active" id="subBtn">Sub</button>
+              <button class="btn" id="dubBtn">Dub</button>
+            </div>
           </div>
         </div>
         <div id="hlsSettings" class="hidden">
@@ -455,49 +519,63 @@
 <!-- Settings dialog -->
 <div class="overlay" id="settings">
   <div class="dialog">
-    <h3>Settings</h3>
+    <div class="dhead"><h3>Settings</h3><button class="adx" id="sClose" aria-label="Close">&times;</button></div>
+    <div class="stabs" role="tablist">
+      <button class="stab active" data-panel="account">Account &amp; Sync</button>
+      <button class="stab" data-panel="library">Library Rules</button>
+      <button class="stab" data-panel="sources">Embed &amp; Provider Sources</button>
+    </div>
 
-    <!-- AniList integration -->
-    <div class="box">
-      <h4>AniList Integration <span class="albadge" id="alStatus">Not connected</span></h4>
-      <small>Paste your AniList access token to sync progress automatically. Selecting an episode sets that show to <code>CURRENT</code> with the episode as progress. Create a token at <a href="https://anilist.co/settings/developer" target="_blank" rel="noopener">anilist.co/settings/developer</a>. It is stored only in this browser's localStorage as <code>anilist_token</code>.</small>
-      <input type="password" id="alTokenInput" placeholder="AniList access token" autocomplete="off">
-      <label for="alDefaultStatus">Status for new entries</label>
-      <select id="alDefaultStatus"></select>
-      <small>Episode progress always syncs automatically. On a title's watch page you can change its status any time; if it is set to Completed, episode syncing pauses so a rewatch can't overwrite it.</small>
-      <div class="err" id="alErr"></div>
-      <div class="row" style="margin:0">
-        <button class="btn primary" id="alConnect">Connect</button>
-        <button class="btn hidden" id="alDisconnect">Disconnect</button>
+    <!-- Account & Sync -->
+    <section class="spanel" data-panel="account">
+      <div class="box">
+        <h4>AniList Integration <span class="albadge" id="alStatus">Not connected</span></h4>
+        <small>Paste your AniList access token to sync progress automatically. Selecting an episode updates that show's progress. Create a token at <a href="https://anilist.co/settings/developer" target="_blank" rel="noopener">anilist.co/settings/developer</a>. It is stored only in this browser's localStorage as <code>anilist_token</code>.</small>
+        <input type="password" id="alTokenInput" placeholder="AniList access token" autocomplete="off">
+        <label for="alDefaultStatus">Status for new entries</label>
+        <select id="alDefaultStatus"></select>
+        <small>Episode progress always syncs automatically. On a title's watch page you can change its status any time; if it is set to Completed, episode syncing pauses so a rewatch can't overwrite it.</small>
+        <div class="err" id="alErr"></div>
+        <div class="row" style="margin:0">
+          <button class="btn primary" id="alConnect">Connect</button>
+          <button class="btn hidden" id="alDisconnect">Disconnect</button>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <div class="box">
-      <h4>Library</h4>
-      <label class="chk"><input type="checkbox" id="groupToggle"> Group seasons of the same show into one card (Already Watched). Movies stay separate.</label>
-    </div>
-
-    <h3 class="sec">Embed Providers</h3>
-    <small>Add the embed sources you want to use, and star one as your default. Sources set up by the site owner show under Site sources. Use <code>{ID}</code>, <code>{EP}</code> and <code>{TYPE}</code> (sub/dub) in the URL template. Only use sources you have the right to embed.</small>
-    <div class="plist" id="plist"></div>
-    <div class="form">
-      <label for="pName">Name</label>
-      <input type="text" id="pName" placeholder="e.g. My Provider">
-      <label for="pType">ID Type</label>
-      <select id="pType">
-        <option value="anilist">AniList ID ({ID})</option>
-        <option value="mal">MyAnimeList ID ({ID})</option>
-      </select>
-      <label for="pTpl">URL Template</label>
-      <input type="text" id="pTpl" placeholder="https://provider.example/embed/{ID}/{EP}/{TYPE}">
-      <div class="err" id="pErr"></div>
-      <div class="row" style="margin:0">
-        <button class="btn primary" id="pSave">Add provider</button>
-        <button class="btn hidden" id="pCancel">Cancel edit</button>
-        <span style="flex:1"></span>
-        <button class="btn" id="pClose">Done</button>
+    <!-- Library Rules -->
+    <section class="spanel hidden" data-panel="library">
+      <div class="box">
+        <h4>Season grouping</h4>
+        <label class="chk"><input type="checkbox" id="groupToggle"> Group seasons of the same show into one card (Already Watched). Movies, OVAs and specials always stay separate.</label>
       </div>
-    </div>
+    </section>
+
+    <!-- Embed & Provider Sources -->
+    <section class="spanel hidden" data-panel="sources">
+      <small>Add the embed sources you want to use, and star one as your default. Sources set up by the site owner appear under Site sources. Use <code>{ID}</code>, <code>{EP}</code> and <code>{TYPE}</code> (sub/dub) in the URL template, and press Test to preview how they resolve. Only use sources you have the right to embed.</small>
+      <div class="plist" id="plist"></div>
+      <div class="form">
+        <label for="pName">Name</label>
+        <input type="text" id="pName" placeholder="e.g. My Provider">
+        <label for="pType">ID Type</label>
+        <select id="pType">
+          <option value="anilist">AniList ID ({ID})</option>
+          <option value="mal">MyAnimeList ID ({ID})</option>
+        </select>
+        <label for="pTpl">URL Template</label>
+        <input type="text" id="pTpl" placeholder="https://provider.example/embed/{ID}/{EP}/{TYPE}">
+        <div class="err" id="pErr"></div>
+        <div class="row" style="margin:0">
+          <button class="btn primary" id="pSave">Add provider</button>
+          <button class="btn" id="pTest">Test template</button>
+          <button class="btn hidden" id="pCancel">Cancel edit</button>
+        </div>
+        <div class="ptest hidden" id="pTestOut"></div>
+      </div>
+    </section>
+
+    <div class="dfoot"><button class="btn primary" id="pClose">Done</button></div>
   </div>
 </div>
 
@@ -943,30 +1021,90 @@ $('modeHls').onclick = () => setMode('hls');
 
 /* ============ Settings: add / edit / delete providers ============ */
 let editingId = null;
-const openSettings = () => { renderProvList(); renderAl(); $('settings').classList.add('open'); };
+let setPanel = 'account';
+function showSetPanel(name) {
+  setPanel = name;
+  document.querySelectorAll('.stab').forEach(b => b.classList.toggle('active', b.dataset.panel === name));
+  document.querySelectorAll('.spanel').forEach(p => p.classList.toggle('hidden', p.dataset.panel !== name));
+}
+document.querySelectorAll('.stab').forEach(b => b.onclick = () => showSetPanel(b.dataset.panel));
+const openSettings = panel => { renderProvList(); renderAl(); showSetPanel(typeof panel === 'string' ? panel : setPanel); $('settings').classList.add('open'); };
 const closeSettings = () => { resetForm(); $('settings').classList.remove('open'); };
-$('openSettings').onclick = openSettings; $('manageProv').onclick = openSettings; $('pClose').onclick = closeSettings;
+$('openSettings').onclick = () => openSettings(); $('manageProv').onclick = () => openSettings('sources'); $('pClose').onclick = closeSettings; $('sClose').onclick = closeSettings;
 // Close only when a press STARTS on the backdrop. Using mousedown (not click) means that
 // selecting text and releasing over the backdrop no longer closes the dialog.
 // The clientX check ignores presses on the overlay's own scrollbar.
 $('settings').addEventListener('mousedown', e => { if (e.target === $('settings') && e.clientX < $('settings').clientWidth) closeSettings(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('settings').classList.contains('open')) closeSettings(); });
 
-function resetForm() { editingId = null; $('pName').value = ''; $('pTpl').value = ''; $('pType').value = 'anilist'; refreshSelect($('pType')); $('pErr').textContent = ''; $('pSave').textContent = 'Add provider'; $('pCancel').classList.add('hidden'); }
+function resetForm() { editingId = null; $('pName').value = ''; $('pTpl').value = ''; $('pType').value = 'anilist'; refreshSelect($('pType')); $('pErr').textContent = ''; $('pSave').textContent = 'Add provider'; $('pCancel').classList.add('hidden'); $('pTestOut').classList.add('hidden'); }
 $('pCancel').onclick = resetForm;
 
-function provRow(p) {
-  const row = el('div', 'prov'), info = el('div'), isDef = userDefaultId() === p.id;
-  const nm = el('b', '', p.name);
-  if (isDef) nm.appendChild(el('span', 'pb def', '★ Default')); else if (p.id === siteDefaultId) nm.appendChild(el('span', 'pb', 'Site default'));
+/* ---- Template test: shows how {ID} / {EP} / {TYPE} resolve and sanity-checks the URL ---- */
+const SAMPLE_ID = 154587;
+function templateReport(tpl, idType) {
+  const a = state.anime, real = a ? (idType === 'mal' ? a.idMal : a.id) : null;
+  const vals = { ID: real || SAMPLE_ID, EP: a ? (state.ep || 1) : 1, TYPE: state.lang };
+  const note = real ? `Using "${clip(titleOf(a), 40)}" (${idType === 'mal' ? 'MAL' : 'AniList'} ID ${real}), episode ${vals.EP}, ${vals.TYPE}`
+                    : `Using sample values: ID ${SAMPLE_ID}, episode 1, ${vals.TYPE}` + (a && idType === 'mal' ? ' (this title has no MyAnimeList ID)' : '');
+  let resolved = ''; const unknown = [];
+  const segs = tpl.split(/(\{[^{}]*\})/).filter(x => x !== '').map(x => {
+    const m = /^\{([^{}]*)\}$/.exec(x);
+    if (!m) { resolved += x; return { t: x, k: 'lit' }; }
+    if (vals[m[1]] !== undefined) { resolved += vals[m[1]]; return { t: String(vals[m[1]]), k: m[1].toLowerCase(), ph: x }; }
+    unknown.push(x); resolved += x; return { t: x, k: 'bad' };
+  });
+  const checks = [], add = (k, m) => checks.push([k, m]);
+  /^https?:\/\//i.test(tpl) ? add('ok', 'Starts with http:// or https://') : add('fail', 'Must start with http:// or https://');
+  tpl.includes('{ID}') ? add('ok', '{ID} found') : add('fail', 'Missing {ID}');
+  tpl.includes('{EP}') ? add('ok', '{EP} found') : add('warn', 'No {EP}: every episode would open the same page (fine for movies)');
+  tpl.includes('{TYPE}') ? add('ok', '{TYPE} found') : add('warn', 'No {TYPE}: the Sub/Dub toggle will not change the stream');
+  if (unknown.length) add('fail', `Unknown placeholder ${unknown.join(', ')}. Use {ID}, {EP}, {TYPE} (case-sensitive)`);
+  try { const u = new URL(resolved); add('ok', 'Resolves to a valid URL (' + u.host + ')'); } catch (e) { add('fail', 'Does not resolve to a valid URL'); }
+  if (location.protocol === 'https:' && /^http:\/\//i.test(tpl)) add('warn', 'http:// embeds are blocked on https pages; use https://');
+  return { note, segs, resolved, checks, failed: checks.some(c => c[0] === 'fail'), vals };
+}
+function renderTest(box, tpl, idType) {
+  box.innerHTML = ''; box.classList.remove('hidden');
+  if (!tpl) { box.appendChild(el('div', 'pnote', 'Enter a URL template to test.')); return; }
+  const r = templateReport(tpl, idType);
+  box.appendChild(el('div', 'pnote', r.note));
+  const url = el('div', 'purl'); r.segs.forEach(sg => url.appendChild(el('span', 'ps-' + sg.k, sg.t))); box.appendChild(url);
+  const chips = el('div', 'pchips');
+  r.segs.filter(sg => sg.ph).forEach(sg => chips.appendChild(el('span', '', `${sg.ph} → ${sg.t}`)));
+  if (chips.children.length) box.appendChild(chips);
+  const ul = el('ul', 'pchecks');
+  r.checks.forEach(([k, m]) => ul.appendChild(el('li', 'c-' + k, (k === 'ok' ? '✓ ' : k === 'warn' ? '! ' : '✕ ') + m)));
+  box.appendChild(ul);
+  const act = el('div', 'pactions'), copy = el('button', 'btn', 'Copy URL'), open = el('button', 'btn', 'Open in new tab');
+  copy.onclick = () => navigator.clipboard?.writeText(r.resolved).then(() => toast('URL copied'), () => toast('Could not copy', 'err'));
+  open.disabled = r.failed; open.onclick = () => window.open(r.resolved, '_blank', 'noopener');
+  act.append(copy, open); box.appendChild(act);
+}
+$('pTest').onclick = () => renderTest($('pTestOut'), $('pTpl').value.trim(), $('pType').value);
+['input', 'change'].forEach(ev => { $('pTpl').addEventListener(ev, () => { if (!$('pTestOut').classList.contains('hidden')) renderTest($('pTestOut'), $('pTpl').value.trim(), $('pType').value); }); $('pType').addEventListener(ev, () => { if (!$('pTestOut').classList.contains('hidden')) renderTest($('pTestOut'), $('pTpl').value.trim(), $('pType').value); }); });
+
+function provRow(p, i) {
+  const isDef = userDefaultId() === p.id, isCur = providerId === p.id;
+  const row = el('div', 'prov ' + (p.global ? 'site' : 'user') + (i % 2 ? ' alt' : '') + (isDef ? ' isdef' : '') + (isCur ? ' current' : ''));
+  const info = el('div'), nm = el('b', '', p.name);
+  nm.appendChild(el('span', 'pb ' + (p.global ? 'site' : 'you'), p.global ? 'SITE' : 'YOURS'));
+  if (isDef) nm.appendChild(el('span', 'pb def', '★ Default'));
+  else if (p.id === siteDefaultId) nm.appendChild(el('span', 'pb', 'Site default'));
+  if (isCur) nm.appendChild(el('span', 'pb cur', '● Active'));
   info.appendChild(nm);
   info.appendChild(el('small', '', (p.idType === 'mal' ? 'MyAnimeList ID' : 'AniList ID') + ' • ' + p.template));
   const star = el('button', 'btn' + (isDef ? ' active' : ''), isDef ? '★ Default' : 'Set default');
   star.onclick = () => toggleDefault(p.id);
   row.append(info, star);
   if (!p.global) {                                   // site sources are read-only
-    const edit = el('button', 'btn', 'Edit'), del = el('button', 'btn', 'Delete');
-    edit.onclick = () => { editingId = p.id; $('pName').value = p.name; $('pType').value = p.idType; refreshSelect($('pType')); $('pTpl').value = p.template; $('pSave').textContent = 'Save changes'; $('pCancel').classList.remove('hidden'); $('pErr').textContent = ''; };
+    const test = el('button', 'btn', 'Test'), edit = el('button', 'btn', 'Edit'), del = el('button', 'btn', 'Delete');
+    test.onclick = () => {
+      const open = row.querySelector('.ptest');
+      if (open) { open.remove(); test.classList.remove('active'); return; }
+      const box = el('div', 'ptest'); row.appendChild(box); test.classList.add('active'); renderTest(box, p.template, p.idType);
+    };
+    edit.onclick = () => { editingId = p.id; $('pName').value = p.name; $('pType').value = p.idType; refreshSelect($('pType')); $('pTpl').value = p.template; $('pSave').textContent = 'Save changes'; $('pCancel').classList.remove('hidden'); $('pErr').textContent = ''; $('pTestOut').classList.add('hidden'); };
     del.onclick = () => {
       if (!confirm(`Delete "${p.name}"?`)) return;
       providers = providers.filter(x => x.id !== p.id);
@@ -975,16 +1113,16 @@ function provRow(p) {
       saveProviders(); renderProvSelect(); renderProvList(); if (editingId === p.id) resetForm();
       if (state.anime) { updateNav(); playEmbed(); }
     };
-    row.append(edit, del);
+    row.append(test, edit, del);
   }
   return row;
 }
 function renderProvList() {
   const box = $('plist'); box.innerHTML = '';
-  if (siteProviders.length) { box.appendChild(el('div', 'label', 'Site sources')); siteProviders.forEach(p => box.appendChild(provRow(p))); }
-  if (siteProviders.length && providers.length) box.appendChild(el('div', 'label', 'Your sources'));
-  if (!siteProviders.length && !providers.length) box.appendChild(el('div', 'status', 'No providers yet. Add one below.'));
-  providers.forEach(p => box.appendChild(provRow(p)));
+  if (siteProviders.length) { box.appendChild(el('div', 'label site', 'Site sources')); siteProviders.forEach((p, i) => box.appendChild(provRow(p, i))); }
+  if (siteProviders.length && providers.length) box.appendChild(el('div', 'label you', 'Your sources'));
+  if (!siteProviders.length && !providers.length) box.appendChild(el('div', 'status', 'No sources yet. Add one below.'));
+  providers.forEach((p, i) => box.appendChild(provRow(p, i)));
 }
 
 $('pSave').onclick = () => {
@@ -1051,7 +1189,7 @@ function disconnectAl() {
 }
 $('alConnect').onclick = connectAl; $('alDisconnect').onclick = disconnectAl;
 $('alTokenInput').addEventListener('keydown', e => { if (e.key === 'Enter') connectAl(); });
-$('alBadge').onclick = openSettings;
+$('alBadge').onclick = () => openSettings('account');
 
 // Fires on episode selection; debounced so skimming through episodes sends one request
 let syncTimer, lastSynced = '';
@@ -1270,16 +1408,20 @@ async function loadRecs(a) {
   let recs = recCache.get(a.id);
   if (!recs) {
     try {
-      const d = await gql(`query($id:Int){ Media(id:$id){ recommendations(perPage:12, sort:RATING_DESC){ nodes{ mediaRecommendation{ id isAdult title{romaji english} coverImage{large} format seasonYear averageScore } } } } }`, { id: a.id });
+      const d = await gql(`query($id:Int){ Media(id:$id){ recommendations(perPage:12, sort:RATING_DESC){ nodes{ mediaRecommendation{ id isAdult title{romaji english} coverImage{large} format seasonYear averageScore genres } } } } }`, { id: a.id });
       recs = d.Media.recommendations.nodes.map(n => n.mediaRecommendation).filter(m => m && !m.isAdult);
       recCache.set(a.id, recs);
     } catch (e) { return; }
   }
   if (!state.anime || state.anime.id !== a.id || !recs.length) return;     // navigated away, or nothing to show
   recs.forEach(m => {
-    const row = el('div', 'rec'), img = el('img'), t = el('div', 't'), b = el('b', '', shortTitle(m, 44));
+    const row = el('div', 'rec'), img = el('img'), t = el('div', 't'), b = el('b', '', shortTitle(m, 64)), badges = el('div', 'badges'), genres = el('div', 'genres');
     img.loading = 'lazy'; img.alt = ''; img.src = m.coverImage.large; b.title = titleOf(m);
-    t.append(b, el('small', '', [m.format && m.format.replace('_', ' '), m.seasonYear, score(m) && '★ ' + score(m)].filter(Boolean).join(' • ')));
+    if (score(m)) badges.appendChild(el('span', 'rb score', '★ ' + score(m)));
+    if (m.format) badges.appendChild(el('span', 'rb fmt', m.format.replace('_', ' ')));
+    if (m.seasonYear) badges.appendChild(el('span', 'rb', m.seasonYear));
+    (m.genres || []).slice(0, 3).forEach(g => genres.appendChild(el('span', 'rb gen', g)));
+    t.append(b, badges); if (genres.children.length) t.appendChild(genres);
     row.append(img, t); row.onclick = () => goWatch(m.id); list.appendChild(row);
   });
   box.classList.remove('hidden'); side.classList.remove('norecs');

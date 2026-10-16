@@ -328,6 +328,9 @@
   .rec.stacked { box-shadow:5px 5px 0 -1px rgba(255,255,255,.06), 10px 10px 0 -2px rgba(255,255,255,.035); }
   .rec.stacked:hover { box-shadow:5px 5px 0 -1px rgba(255,255,255,.06), 10px 10px 0 -2px rgba(255,255,255,.035), 0 10px 26px rgba(255,75,75,.18); }
 
+  .epnote { font-size:.78rem; color:var(--muted); margin:0 0 8px; }
+  .epnote button { background:none; border:none; color:var(--gold); font:inherit; font-size:.78rem; font-weight:700; cursor:pointer; padding:0 0 0 6px; text-decoration:underline; }
+
   /* ============ Header: random + EN/JP ============ */
   #randBtn svg { display:block; }
   #randBtn.spin svg { animation:spin .7s linear infinite; }
@@ -360,6 +363,7 @@
   <button class="btn hidden" id="backBtn">&larr; Back to Home</button>
   <nav class="nav" aria-label="Main">
     <button class="tab active" data-act="home">Home</button>
+    <button class="tab" data-act="mylist">My List</button>
     <button class="tab" data-act="schedule">Schedule</button>
     <button class="tab" data-act="az">A-Z</button>
     <button class="tab" data-act="movies">Movies</button>
@@ -404,6 +408,7 @@
         <select id="fSort" title="Sort"><option value="POPULARITY_DESC">Most popular</option><option value="SCORE_DESC">Top rated</option><option value="TRENDING_DESC">Trending</option><option value="START_DATE_DESC">Newest</option><option value="TITLE_ROMAJI">Title A–Z</option></select>
         <input type="number" id="fYear" placeholder="Year" min="1940" max="2100">
       </div>
+      <div class="tabs hidden" id="mlTabs"></div>
       <div class="tabs hidden" id="schedTabs"></div>
       <div class="status" id="searchStatus"></div>
       <div class="sched hidden" id="schedList"></div>
@@ -471,7 +476,7 @@
 
       <div class="sidewrap"><aside class="side" id="side">
         <div id="alBox" class="hidden">
-          <div class="label">AniList Status</div>
+          <div class="label" id="alBoxLabel">My List</div>
           <select id="alStatusSel"></select>
         </div>
         <div id="seasonBox" class="hidden">
@@ -490,6 +495,7 @@
             <button class="btn" data-v="grid">Grid</button>
           </div>
         </div>
+        <div class="epnote hidden" id="epNote"></div>
         <div class="tabs" id="tabs"></div>
         <div class="eps" id="eps"></div>
         <div class="recs-box hidden" id="recsBox">
@@ -850,7 +856,7 @@ $('search').addEventListener('input', e => {
   timer = setTimeout(async () => {
     $('home').classList.add('hidden'); $('searchPage').classList.remove('hidden');
     $('filterBar').classList.add('hidden'); $('loadMore').classList.add('hidden'); listState.token++; setTab('');
-    $('schedTabs').classList.add('hidden'); $('schedList').classList.add('hidden'); $('doneSection').classList.add('hidden');
+    $('schedTabs').classList.add('hidden'); $('schedList').classList.add('hidden'); $('doneSection').classList.add('hidden'); $('mlTabs').classList.add('hidden');
     $('searchTitle').textContent = `Results for "${q}"`; $('searchStatus').textContent = 'Loading…'; $('searchGrid').innerHTML = '';
     try {
       const list = await qSearch(q);
@@ -990,7 +996,7 @@ document.querySelectorAll('#epFilter .btn').forEach(b => b.onclick = () => { sta
 function selectEpisode(n) {
   if (!state.anime || n < 1 || n > state.count) return;
   state.ep = n; state.tab = Math.floor((n - 1) / BATCH);
-  markWatched(state.anime.id, n);
+  markWatched(state.anime.id, n); trackLocal(state.anime, n); renderAlStatus();
   renderEpisodes(); updateNav(); playEmbed(); saveProgress(); syncAniList(state.anime, n);
   history.replaceState(null, '', `#watch/${state.anime.id}/${n}`);   // shareable/reload-safe, no re-route
 }
@@ -1177,7 +1183,7 @@ function provRow(p, i) {
   else if (p.id === siteDefaultId) nm.appendChild(el('span', 'pb', 'Site default'));
   if (isCur) nm.appendChild(el('span', 'pb cur', '● Active'));
   info.appendChild(nm);
-  info.appendChild(el('small', '', (p.idType === 'mal' ? 'MyAnimeList ID' : 'AniList ID') + ' • ' + p.template));
+  info.appendChild(el('small', '', (p.idType === 'mal' ? 'MyAnimeList ID' : 'AniList ID') + (p.global ? ' • provided by this site' : ' • ' + p.template)));   // site source links stay hidden in the UI
   const star = el('button', 'btn' + (isDef ? ' active' : ''), isDef ? '★ Default' : 'Set default');
   star.onclick = () => toggleDefault(p.id);
   row.append(info, star);
@@ -1289,6 +1295,7 @@ function syncAniList(a, ep) {
     try {
       await gql(SAVE_MUTATION, { mediaId: a.id, progress: ep, status }, token);
       lastSynced = key; toast(`Synced Ep ${ep} to AniList!`);
+      localSet(a, status, ep);
       alEntries.set(a.id, { progress: ep, status }); if (state.anime && state.anime.id === a.id) { renderEpisodes(); renderSeasons(); renderAlStatus(); }
     } catch (e) {
       if (isAuthError(e)) { al.status = 'bad'; renderAl(); }
@@ -1311,7 +1318,7 @@ function prepareList(title, filters) {
   $('filterBar').classList.toggle('hidden', !filters);
   $('searchTitle').textContent = title; $('searchStatus').textContent = ''; $('searchGrid').innerHTML = '';
   $('loadMore').classList.add('hidden');
-  $('schedTabs').classList.add('hidden'); $('schedList').classList.add('hidden'); $('schedList').innerHTML = '';
+  $('schedTabs').classList.add('hidden'); $('schedList').classList.add('hidden'); $('schedList').innerHTML = ''; $('mlTabs').classList.add('hidden');
   $('doneSection').classList.add('hidden'); $('doneGrid').innerHTML = '';
   window.scrollTo({ top: 0, behavior: 'smooth' });
   return ++listState.token;
@@ -1348,26 +1355,51 @@ function filterArgs() {
   listState.token++; Object.assign(listState, { args: filterArgs(), page: 1 }); $('searchGrid').innerHTML = ''; loadListPage();
 }));
 
-// My Anime List = saved watch history
-function showMyList() {
-  prepareList('My Anime List', false);
-  const hist = getHistory();
-  $('searchStatus').textContent = hist.length ? '' : 'Nothing here yet. Episodes you watch are saved automatically.';
-  hist.forEach(h => {
-    const extra = histExtra(h);
-    { const c = makeCard(histMedia(h), () => resume(h), extra); c._extra = () => histExtra(h); $('searchGrid').appendChild(c); }
-  });
-  // "Already Watched" section: your completed list from AniList
+// My List page: AniList's lists when connected, otherwise the list saved in this browser
+const ML_LIGHT = 'id idMal title{romaji english native} coverImage{large} format seasonYear averageScore episodes';
+const myList = { tab: 'ALL', items: [], source: 'local', token: 0 };
+async function loadMyListData() {
   if (alToken() && al.id) {
-    const tk = listState.token, grid = $('doneGrid');
-    $('doneSection').classList.remove('hidden'); grid.appendChild(el('div', 'status', 'Loading…'));
-    fetchCompleted(4).then(list => {
-      if (tk !== listState.token) return;
-      grid.innerHTML = '';
-      if (!list.length) grid.appendChild(el('div', 'status', 'No completed anime on your AniList yet.'));
-      groupSeasons(list).forEach(g => grid.appendChild(groupCard(g, 'Completed')));
-    }).catch(e => { if (tk === listState.token) grid.textContent = 'Failed to load: ' + e.message; });
+    const out = [];
+    for (let c = 1; c <= 8; c++) {
+      const d = await gql(`query($u:Int,$c:Int){ MediaListCollection(userId:$u, type:ANIME, sort:UPDATED_TIME_DESC, chunk:$c, perChunk:500){ hasNextChunk lists{ isCustomList entries{ status progress updatedAt media{ ${ML_LIGHT} } } } } }`, { u: al.id, c }, alToken());
+      const col = d.MediaListCollection;
+      (col.lists || []).filter(l => !l.isCustomList).forEach(l => l.entries.forEach(e => { if (e.media) out.push({ status: e.status, progress: e.progress || 0, updated: (e.updatedAt || 0) * 1000, media: e.media }); }));
+      if (!col.hasNextChunk) break;
+    }
+    myList.source = 'anilist';
+    return out.sort((x, y) => y.updated - x.updated);
   }
+  myList.source = 'local';
+  return Object.values(localList()).map(e => ({ status: e.status, progress: e.progress || 0, updated: e.updated || 0, media: e.media })).sort((x, y) => y.updated - x.updated);
+}
+function renderMyList() {
+  const items = myList.items, tabs = $('mlTabs'), grid = $('searchGrid'); tabs.innerHTML = ''; grid.innerHTML = '';
+  const counts = {}; items.forEach(i => counts[i.status] = (counts[i.status] || 0) + 1);
+  [['ALL', 'All', items.length], ...AL_STATUSES.map(([v, l]) => [v, l, counts[v] || 0])].forEach(([v, l, n]) => {
+    const b = el('button', myList.tab === v ? 'active' : '', `${l} (${n})`);
+    b.onclick = () => { myList.tab = v; renderMyList(); };
+    tabs.appendChild(b);
+  });
+  const shown = items.filter(i => myList.tab === 'ALL' || i.status === myList.tab);
+  $('searchStatus').textContent = !items.length ? 'Your list is empty. Open a title and set its status, or just start watching an episode.'
+    : !shown.length ? 'Nothing here yet.'
+    : myList.source === 'anilist' ? 'Synced with your AniList.' : 'Saved in this browser. Connect AniList in Settings to sync it.';
+  shown.forEach(i => {
+    const m = i.media, eps = m.episodes;
+    grid.appendChild(makeCard(m, () => goWatch(m.id), alStatusLabel(i.status) + (i.progress ? ` • Ep ${i.progress}${eps ? '/' + eps : ''}` : '')));
+  });
+}
+async function showMyListPage() {
+  const tk = myList.token = prepareList('My List', false);
+  $('mlTabs').classList.remove('hidden'); $('searchStatus').textContent = 'Loading your list…';
+  try { myList.items = await loadMyListData(); }
+  catch (e) { if (tk === listState.token) $('searchStatus').textContent = 'Failed to load your list: ' + e.message; return; }
+  if (tk === listState.token) renderMyList();
+}
+async function refreshMyListIfOpen() {                         // keep the page in sync after a status change elsewhere
+  if (myList.token !== listState.token || $('searchPage').classList.contains('hidden')) return;
+  try { const items = await loadMyListData(); if (myList.token === listState.token) { myList.items = items; renderMyList(); } } catch (e) { /* ignore */ }
 }
 
 // Random Pick: random entry from the high-rated, well-known pool
@@ -1394,7 +1426,7 @@ const ACTIONS = {
   popular:   () => openList('Most Popular', POP),
   completed: () => openList('Completed', 'status: FINISHED, ' + POP),
   random:    randomPick,
-  mylist:    showMyList,
+  mylist:    showMyListPage,
   az:        () => openList('A-Z Index', 'sort: TITLE_ROMAJI'),
   schedule:  showSchedule,
   home:      () => { $('search').value = ''; listState.token++; $('searchPage').classList.add('hidden'); $('home').classList.remove('hidden'); showView('home'); if (location.hash !== '#home') location.hash = '#home'; renderContinue(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
@@ -1489,41 +1521,74 @@ async function loadWatchedRow() {
 }
 
 /* ============ Episode names ============ */
-// Primary source: Jikan (MyAnimeList data, public API, 100 episodes per page). Fallback: AniList streamingEpisodes.
-const epNameCache = new Map();    // AniList id -> { names: Map(ep -> { t, jp, ro }), running, done }
+// Sources, tried in order until every episode has a name: AniZip (by AniList id), Jikan (MyAnimeList data), AniList streamingEpisodes.
+const epNameCache = new Map();    // AniList id -> { names: Map(ep -> { t, jp, ro }), running, done, errors }
+const isPlaceholder = x => !x || /^episode\s*\d+$/i.test(String(x).trim());
 function epName(id, ep) {
   if (!pref.get('epnames', true)) return '';
   const n = epNameCache.get(id)?.names.get(ep); if (!n) return '';
   const t = ((titleLang === 'native' ? (n.jp || n.t) : titleLang === 'romaji' ? (n.ro || n.t) : n.t) || '').trim();
-  return /^episode\s*\d+$/i.test(t) ? '' : t;          // ignore placeholder names like "Episode 12"
+  return isPlaceholder(t) ? '' : t;
 }
-async function loadEpNames(a) {
-  if (!pref.get('epnames', true)) return;
-  const id = a.id; let rec = epNameCache.get(id);
-  if (rec && (rec.done || rec.running)) return;
-  if (!rec) { rec = { names: new Map(), running: false, done: false }; epNameCache.set(id, rec); }
-  rec.running = true;
-  const here = () => state.anime && state.anime.id === id, refresh = () => { if (here()) { renderEpisodes(); updateNav(); } };
-  try {
-    if (a.idMal) {
-      for (let p = 1; p <= 12; p++) {                                   // up to 1,200 episodes, ~2 requests/second
-        if (!here()) break;
-        const r = await fetch(`https://api.jikan.moe/v4/anime/${a.idMal}/episodes?page=${p}`);
-        if (!r.ok) break;
-        const j = await r.json();
-        (j.data || []).forEach(e => rec.names.set(e.mal_id, { t: e.title, jp: e.title_japanese, ro: e.title_romanji }));
-        refresh();
-        if (!j.pagination?.has_next_page) { rec.done = true; break; }
-        await new Promise(res => setTimeout(res, 450));
-      }
+function setEpNote(text, retry) {
+  const n = $('epNote'); n.innerHTML = ''; n.classList.toggle('hidden', !text);
+  if (!text) return;
+  n.append(text);
+  if (retry) { const b = el('button', '', 'Retry'); b.onclick = () => state.anime && loadEpNames(state.anime, true); n.appendChild(b); }
+}
+async function loadEpNames(a, force) {
+  if (!pref.get('epnames', true)) { setEpNote(''); return; }
+  const id = a.id;
+  if (force) epNameCache.delete(id);
+  let rec = epNameCache.get(id);
+  const here = () => !!state.anime && state.anime.id === id;
+  const note = () => {
+    if (!here()) return;
+    const have = rec.names.size, total = state.count;
+    if (have) setEpNote(have < total ? `Names found for ${have} of ${total} episodes.` : '');
+    else if (rec.errors) setEpNote("Couldn't load episode names (network issue, or blocked by an extension).", true);
+    else setEpNote('No episode names found for this title.');
+  };
+  if (rec && rec.done) { note(); return; }
+  if (rec && rec.running) return;
+  if (!rec) { rec = { names: new Map(), running: false, done: false, errors: 0 }; epNameCache.set(id, rec); }
+  rec.running = true; setEpNote('Loading episode names…');
+  const refresh = () => { if (here()) { renderEpisodes(); updateNav(); } };
+  const put = (n, t, jp, ro) => {
+    if (!Number.isFinite(n) || rec.names.has(n) || (isPlaceholder(t) && isPlaceholder(jp) && isPlaceholder(ro))) return;   // earlier sources win
+    rec.names.set(n, { t: !isPlaceholder(t) ? t : (!isPlaceholder(ro) ? ro : jp), jp: !isPlaceholder(jp) ? jp : undefined, ro: !isPlaceholder(ro) ? ro : undefined });
+  };
+  const full = () => rec.names.size >= Math.max(1, state.count || a.episodes || 1);
+  const viaAniZip = async () => {
+    const r = await fetch(`https://api.ani.zip/mappings?anilist_id=${id}`);
+    if (!r.ok) throw new Error('ani.zip ' + r.status);
+    const j = await r.json();
+    Object.values(j.episodes || {}).forEach(e => put(Number(e.episodeNumber ?? e.episode), e.title?.en, e.title?.ja, e.title?.['x-jat']));
+  };
+  const viaJikan = async () => {
+    for (let p = 1; p <= 12; p++) {                                       // up to 1,200 episodes, ~2 requests/second
+      if (!here()) return;
+      const r = await fetch(`https://api.jikan.moe/v4/anime/${a.idMal}/episodes?page=${p}`);
+      if (!r.ok) { if (p === 1) throw new Error('jikan ' + r.status); return; }
+      const j = await r.json();
+      (j.data || []).forEach(e => put(e.mal_id, e.title, e.title_japanese, e.title_romanji));
+      refresh();
+      if (!j.pagination?.has_next_page) return;
+      await new Promise(res => setTimeout(res, 450));
     }
-    if (!rec.names.size && here()) {                                     // fallback: titles AniList gets from streaming sites
-      const d = await gql(`query($id:Int){ Media(id:$id){ streamingEpisodes{ title } } }`, { id });
-      (d.Media?.streamingEpisodes || []).forEach(se => { const m = /^(?:episode|ep\.?)\s*(\d+)\s*[-–:]\s*(.+)$/i.exec(se.title || ''); if (m) rec.names.set(+m[1], { t: m[2].trim() }); });
-      rec.done = true; refresh();
-    }
-  } catch (e) { /* names are optional */ }
+  };
+  const viaAniList = async () => {
+    const d = await gql(`query($id:Int){ Media(id:$id){ streamingEpisodes{ title } } }`, { id });
+    (d.Media?.streamingEpisodes || []).forEach(se => { const m = /^(?:episode|ep\.?)\s*(\d+)\s*[-–:]\s*(.+)$/i.exec(se.title || ''); if (m) put(+m[1], m[2].trim()); });
+  };
+  for (const src of [viaAniZip, ...(a.idMal ? [viaJikan] : []), viaAniList]) {
+    if (!here() || full()) break;
+    try { await src(); } catch (e) { rec.errors++; }
+    refresh();
+  }
   rec.running = false;
+  rec.done = here() && (rec.names.size > 0 || rec.errors === 0);       // retry on the next visit if everything failed
+  note(); refresh();
 }
 
 /* ============ Recommendations (fills the sidebar under the episode list) ============ */
@@ -1564,22 +1629,55 @@ const AL_STATUSES = [['CURRENT', 'Watching'], ['PLANNING', 'Planning'], ['COMPLE
 const alStatusLabel = v => (AL_STATUSES.find(x => x[0] === v) || [v, v])[1];
 const defaultAlStatus = () => store.get('anifin.alStatusDefault', 'CURRENT');
 const alStatusOf = id => alEntries.get(id)?.status || defaultAlStatus();
-const fillStatus = sel => { sel.innerHTML = ''; AL_STATUSES.forEach(([v, l]) => sel.appendChild(new Option(l, v))); };
-function renderAlStatus() {
-  const show = al.status === 'ok' && !!state.anime;
-  $('alBox').classList.toggle('hidden', !show);
-  if (show) { $('alStatusSel').value = alStatusOf(state.anime.id); refreshSelect($('alStatusSel')); }
+const fillStatus = (sel, withNone) => { sel.innerHTML = ''; if (withNone) sel.appendChild(new Option('Not on my list', '')); AL_STATUSES.forEach(([v, l]) => sel.appendChild(new Option(l, v))); };
+const snap = a => ({ id: a.id, title: a.title, coverImage: { large: a.coverImage.large }, format: a.format, seasonYear: a.seasonYear, averageScore: a.averageScore, episodes: a.episodes });
+const localList = () => store.get('anifin.mylist', {});
+function localSet(a, status, progress) {
+  const all = localList();
+  if (!status) delete all[a.id];
+  else all[a.id] = { status, progress: progress ?? all[a.id]?.progress ?? 0, updated: Date.now(), media: snap(a) };
+  store.set('anifin.mylist', all);
 }
-$('alStatusSel').onchange = async e => {
-  const id = state.anime?.id, status = e.target.value, token = alToken();
-  if (!id || !token) return;
+// Connected: AniList is the source of truth. Otherwise the list lives in this browser.
+const listStatusOf = id => (al.status === 'ok' && al.id) ? (alEntries.get(id)?.status || '') : (localList()[id]?.status || '');
+// Watching an episode adds the title to your list (Planning -> Watching); Completed is never changed
+function trackLocal(a, ep) {
+  const prev = localList()[a.id];
+  const status = prev ? (prev.status === 'PLANNING' ? 'CURRENT' : prev.status) : defaultAlStatus();
+  if (status !== 'COMPLETED') localSet(a, status, ep);
+}
+function renderAlStatus() {
+  const show = !!state.anime;
+  $('alBox').classList.toggle('hidden', !show);
+  if (!show) return;
+  $('alBoxLabel').textContent = al.status === 'ok' ? 'My List · synced with AniList' : 'My List';
+  $('alStatusSel').value = listStatusOf(state.anime.id); refreshSelect($('alStatusSel'));
+}
+async function applyListStatus(a, status) {
+  const token = alToken(), connected = !!token && al.status === 'ok' && !!al.id;
   try {
-    const d = await gql(`mutation($mediaId:Int,$status:MediaListStatus){ SaveMediaListEntry(mediaId:$mediaId, status:$status){ id status progress } }`, { mediaId: id, status }, token);
-    alEntries.set(id, { progress: d.SaveMediaListEntry.progress, status: d.SaveMediaListEntry.status });
-    toast('AniList status: ' + alStatusLabel(status));
-    renderEpisodes(); renderSeasons();
-  } catch (err) { toast('Could not update status: ' + err.message, 'err'); renderAlStatus(); }
-};
+    if (!status) {                                                           // "Not on my list"
+      if (!confirm('Remove this title from your list?')) { renderAlStatus(); return; }
+      if (connected) {
+        const d = await gql(`query($u:Int,$m:Int){ MediaList(userId:$u, mediaId:$m){ id } }`, { u: al.id, m: a.id }, token).catch(() => null);
+        if (d?.MediaList?.id) await gql(`mutation($id:Int){ DeleteMediaListEntry(id:$id){ deleted } }`, { id: d.MediaList.id }, token);
+        alEntries.delete(a.id);
+      }
+      localSet(a, null); toast('Removed from your list');
+    } else {
+      let progress;
+      if (connected) {
+        const d = await gql(`mutation($mediaId:Int,$status:MediaListStatus){ SaveMediaListEntry(mediaId:$mediaId, status:$status){ id status progress } }`, { mediaId: a.id, status }, token);
+        progress = d.SaveMediaListEntry.progress;
+        alEntries.set(a.id, { progress, status: d.SaveMediaListEntry.status });
+      }
+      localSet(a, status, progress);
+      toast('My List: ' + alStatusLabel(status) + (connected ? ' (synced to AniList)' : ''));
+    }
+    renderEpisodes(); renderSeasons(); renderAlStatus(); refreshMyListIfOpen();
+  } catch (err) { toast('Could not update your list: ' + err.message, 'err'); renderAlStatus(); }
+}
+$('alStatusSel').onchange = e => { if (state.anime) applyListStatus(state.anime, e.target.value); };
 $('alDefaultStatus').onchange = e => store.set('anifin.alStatusDefault', e.target.value);
 
 /* ============ Styled dropdowns (wrap native <select>, keep its value/change events) ============ */
@@ -1723,7 +1821,7 @@ $('prefTitle').onchange = e => setTitleLang(e.target.value);
 const pref = { get: (k, d) => store.get('anifin.pref.' + k, d), set: (k, v) => store.set('anifin.pref.' + k, v) };
 $('prefAudio').onchange = e => { pref.set('audio', e.target.value); setLang(e.target.value); };
 $('prefOpen').onchange = e => pref.set('open', e.target.value);
-$('prefEpNames').onchange = e => { pref.set('epnames', e.target.checked); if (state.anime) { if (e.target.checked) loadEpNames(state.anime); renderEpisodes(); updateNav(); } };
+$('prefEpNames').onchange = e => { pref.set('epnames', e.target.checked); if (state.anime) { if (e.target.checked) loadEpNames(state.anime); else setEpNote(''); renderEpisodes(); updateNav(); } };
 $('prefAdWarn').onchange = e => { pref.set('adwarn', e.target.checked); if (!e.target.checked) hideAdBanner(false); };
 $('clearHist').onclick = () => { if (!confirm('Clear your Continue Watching list?')) return; store.set('anifin.history', []); renderContinue(); toast('Continue Watching cleared'); };
 $('clearWatched').onclick = () => {
@@ -1735,7 +1833,7 @@ $('clearWatched').onclick = () => {
 $('randBtn').onclick = async () => { const b = $('randBtn'); b.disabled = true; b.classList.add('spin'); try { await randomPick(); } finally { b.disabled = false; b.classList.remove('spin'); } };
 
 /* ============ Init ============ */
-fillStatus($('alStatusSel')); fillStatus($('alDefaultStatus')); $('alDefaultStatus').value = defaultAlStatus();
+fillStatus($('alStatusSel'), true); fillStatus($('alDefaultStatus')); $('alDefaultStatus').value = defaultAlStatus();
 ['provSelect', 'fFormat', 'fGenre', 'fStatus', 'fSort'].forEach(id => enhanceSelect($(id)));
 enhanceSelect($('alStatusSel'), { block: true }); enhanceSelect($('alDefaultStatus'), { block: true });
 enhanceSelect($('pType'), { block: true });

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Anime-X</title>
+<title>Zaku</title>
 <link rel="icon" type="image/x-icon" href="Zaku.ico">
 <link rel="icon" type="image/svg+xml" href="Zaku.svg">
 <style>
@@ -148,13 +148,11 @@
   @keyframes rise { from { opacity:0; transform:translateY(10px) } to { opacity:1; transform:none } }
 
   /* ============ Browse filter bar ============ */
-  .filterbar { display:flex; gap:10px; flex-wrap:wrap; margin:0 0 18px; }
-  .filterbar select, .filterbar input { width:auto; min-width:130px; padding:9px 12px; }
   .loadmore { display:flex; justify-content:center; margin:26px 0 6px; }
 
   /* ============ Footer ============ */
   .site-footer { background:#0d0d11; border-top:1px solid rgba(255,255,255,.06); padding:48px var(--gutter) 0; }
-  .foot-grid { display:grid; grid-template-columns:1.7fr repeat(4,1fr); gap:32px; padding-bottom:40px; }
+  .foot-grid { display:grid; grid-template-columns:1.5fr repeat(3,.9fr) 2.1fr; gap:32px; padding-bottom:40px; }
   .foot-brand p { color:var(--muted); font-size:.88rem; line-height:1.65; max-width:340px; margin:12px 0 0; }
   .foot-col h4 { margin:0 0 14px; font-size:.75rem; text-transform:uppercase; letter-spacing:.14em; color:#cfc8c2; }
   .foot-col { display:flex; flex-direction:column; align-items:flex-start; gap:9px; }
@@ -350,8 +348,61 @@
   body.has-banner #toasts { bottom:110px; }
   @media (max-width:600px) { .adbanner { flex-wrap:wrap; } .adbanner p { flex:1 1 100%; } }
 
+  /* ============ Filter panel ============ */
+  .fpanel { margin:0 0 22px; padding:18px 20px; border-radius:18px; display:grid; gap:14px;
+    background:linear-gradient(135deg,rgba(255,75,75,.08),rgba(249,212,35,.03) 60%),#15151a; border:1px solid var(--glass-border); }
+  .fhead { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .fhead b { font-size:1.05rem; }
+  .fhead #fSummary { flex:1; min-width:140px; color:var(--muted); font-size:.85rem; }
+  .fbody { display:grid; gap:16px; }
+  .fpanel.collapsed .fbody { display:none; }
+  .frow > label, .fgrid label { display:block; margin-bottom:8px; font-size:.72rem; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); font-weight:700; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { padding:6px 13px; border-radius:999px; border:1px solid var(--glass-border); background:var(--glass); color:var(--text); font:inherit; font-size:.8rem; font-weight:600; cursor:pointer; transition:background .15s, border-color .15s, box-shadow .15s; }
+  .chip:hover { border-color:var(--crimson); background:rgba(255,75,75,.16); }
+  .chip.on { background:linear-gradient(135deg,rgba(255,75,75,.45),rgba(138,26,26,.7)); border-color:var(--gold); color:#fff; box-shadow:0 0 12px rgba(249,212,35,.25); }
+  .fgrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; }
+  .fgrid input { width:100%; height:40px; padding:0 14px; border-radius:10px; border:1px solid var(--glass-border); background:var(--glass); color:var(--text); font:inherit; font-size:.92rem; }
+
+  /* ============ Refinement pass: older UI picks up the newer crimson/gold treatment ============ */
+  .sq { width:40px; height:40px; padding:0!important; display:inline-flex; align-items:center; justify-content:center; flex:none; line-height:1; }   /* true squares: random, filter, star, manage */
+  header #openSettings { height:40px; padding:0 14px; }
+  #titleLang { height:40px; align-items:center; }
+  .dd-btn { height:40px; padding:0 14px; }
+  button.primary { background:linear-gradient(135deg,#c4262e,#8a1a1a); border-color:var(--gold); }
+  button.primary:hover { background:linear-gradient(135deg,#ff4b4b,#a82323); border-color:var(--gold); box-shadow:0 6px 20px rgba(255,75,75,.35); }
+  input:focus, select:focus, .fgrid input:focus { outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(249,212,35,.16); }
+  .hero-actions .btn { padding:13px 28px; border-radius:12px; font-size:1.02rem; }
+  .row-head .btn { width:34px; height:34px; padding:0; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:1.15rem; line-height:1; }
+  .row-head .btn:hover { border-color:var(--gold); background:rgba(249,212,35,.14); transform:none; }
+  .tag.score, .card .badge { background:var(--gold); }
+  .dots i.on { background:var(--gold); }
+  .tabs { gap:8px; }
+  .tabs button { border-radius:999px; padding:7px 15px; }
+  .tabs button:hover { border-color:var(--crimson); background:rgba(255,75,75,.2); transform:none; }
+  .card:hover { border-color:var(--gold); box-shadow:0 14px 34px rgba(255,75,75,.3); }
+  .card .pbar { height:4px; margin:-4px 12px 12px; border-radius:2px; background:rgba(255,255,255,.1); overflow:hidden; }
+  .card .pbar i { display:block; height:100%; border-radius:2px; background:linear-gradient(90deg,var(--crimson),var(--gold)); }
+  .srow { background:linear-gradient(135deg,rgba(255,75,75,.09),rgba(255,255,255,.02) 60%); border-left:3px solid var(--crimson); }
+  .srow:nth-child(even) { background:linear-gradient(135deg,rgba(249,212,35,.08),rgba(255,255,255,.02) 60%); border-left-color:var(--gold); }
+  .srow:hover { border-color:var(--gold); }
+  .srow .time, .srow .ep { color:var(--gold); } .srow .ep { border-color:var(--gold); background:rgba(249,212,35,.12); }
+  .srow.done .time { color:var(--muted); }
+  .toast { border-color:var(--gold); box-shadow:0 12px 36px rgba(0,0,0,.6), 0 0 18px rgba(249,212,35,.2); }
+  .toast.err { border-color:#ff8a8a; box-shadow:0 12px 36px rgba(0,0,0,.6), 0 0 18px rgba(255,138,138,.2); }
+  .box { background:linear-gradient(135deg,rgba(255,75,75,.07),rgba(255,255,255,.02) 70%); }
+  .box h4::before { content:""; width:4px; height:16px; border-radius:2px; background:var(--bar); }
+  .site-footer { border-top:1px solid transparent; border-image:linear-gradient(90deg,var(--main),var(--gold),transparent 75%) 1; }
+  .foot-col h4 { position:relative; padding-bottom:9px; }
+  .foot-col h4::after { content:""; position:absolute; left:0; bottom:0; width:26px; height:2px; border-radius:2px; background:linear-gradient(90deg,var(--crimson),var(--gold)); }
+  .flink:hover { color:var(--gold); }
+  .gbtn:hover { color:#fff; background:linear-gradient(135deg,rgba(255,75,75,.45),rgba(138,26,26,.7)); border-color:var(--gold); }
+  .loadmore .btn { padding:12px 30px; border-radius:999px; border-color:var(--gold); }
+  .adbanner { border-color:var(--gold); box-shadow:0 18px 50px rgba(0,0,0,.65), 0 0 22px rgba(249,212,35,.18); }
+  .ctrlbar .sq { width:40px; height:40px; }
+
   @media (max-width:1000px) { header { flex-wrap:wrap; row-gap:4px; } .nav { order:5; flex:0 0 100%; } .searchpage { padding-top:132px; } .wv-hero { padding-top:140px; } .hero { padding-top:150px; } }
-  @media (max-width:900px) { .foot-grid { grid-template-columns:repeat(2,1fr); } .foot-brand { grid-column:1/-1; } }
+  @media (max-width:900px) { .foot-grid { grid-template-columns:repeat(2,1fr); } .foot-brand, .foot-col.genres { grid-column:1/-1; } }
   @media (max-width:520px) { .foot-grid { grid-template-columns:1fr; } #alBadge { display:none; } }
 
   @media (max-width:600px) { .wv-info { flex-direction:column; align-items:flex-start; } .hero { min-height:60vh; } .toolbar select { min-width:0; flex:1; } }
@@ -374,13 +425,14 @@
     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
     <input type="search" id="search" placeholder="Search anime by title…" autocomplete="off">
   </div>
-  <button class="btn iconbtn" id="randBtn" title="Random anime" aria-label="Random anime"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.1" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.1" fill="currentColor"/><circle cx="12" cy="12" r="1.1" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.1" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.1" fill="currentColor"/></svg></button>
+  <button class="btn iconbtn sq" id="randBtn" title="Random anime" aria-label="Random anime"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.1" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.1" fill="currentColor"/><circle cx="12" cy="12" r="1.1" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.1" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.1" fill="currentColor"/></svg></button>
+  <button class="btn iconbtn sq" id="filterBtn" title="Filters: type, genres, airing status and more" aria-label="Filters"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg></button>
   <div class="seg small" id="titleLang" title="Title language">
     <button class="btn active" data-v="english">EN</button>
     <button class="btn" data-v="romaji">JP</button>
   </div>
   <span class="albadge ok hidden" id="alBadge" title="AniList sync is active">&#9679; AniList</span>
-  <button class="btn iconbtn" id="openSettings" title="Settings">&#9881; Settings</button>
+  <button class="btn" id="openSettings" title="Settings">&#9881; Settings</button>
 </header>
 
 <main>
@@ -401,12 +453,28 @@
     </div>
     <div class="searchpage hidden" id="searchPage">
       <div class="row-head"><h2 id="searchTitle"></h2></div>
-      <div class="filterbar hidden" id="filterBar">
-        <select id="fFormat" title="Format"><option value="">Any format</option><option value="TV">TV</option><option value="MOVIE">Movie</option><option value="OVA">OVA</option><option value="ONA">ONA</option><option value="SPECIAL">Special</option></select>
-        <select id="fGenre" title="Genre"><option value="">Any genre</option></select>
-        <select id="fStatus" title="Status"><option value="">Any status</option><option value="RELEASING">Airing</option><option value="FINISHED">Completed</option><option value="NOT_YET_RELEASED">Upcoming</option></select>
-        <select id="fSort" title="Sort"><option value="POPULARITY_DESC">Most popular</option><option value="SCORE_DESC">Top rated</option><option value="TRENDING_DESC">Trending</option><option value="START_DATE_DESC">Newest</option><option value="TITLE_ROMAJI">Title A–Z</option></select>
-        <input type="number" id="fYear" placeholder="Year" min="1940" max="2100">
+      <div class="fpanel hidden" id="filterBar">
+        <div class="fhead">
+          <b>Filters</b><span id="fSummary">No filters</span>
+          <button class="btn" id="fReset">Reset</button>
+          <button class="btn" id="fToggle">Hide filters</button>
+        </div>
+        <div class="fbody">
+          <div class="frow"><label>Type</label><div class="chips" id="fTypes"></div></div>
+          <div class="frow"><label>Airing status</label><div class="chips" id="fStatus"></div></div>
+          <div class="frow"><label>Genres</label><div class="chips" id="fGenres"></div></div>
+          <div class="frow"><label>Popular tags</label><div class="chips" id="fTags"></div></div>
+          <div class="fgrid">
+            <div><label for="fSeason">Season</label>
+              <select id="fSeason"><option value="">Any season</option><option value="WINTER">Winter</option><option value="SPRING">Spring</option><option value="SUMMER">Summer</option><option value="FALL">Fall</option></select></div>
+            <div><label for="fYear">Year</label><input type="number" id="fYear" placeholder="e.g. 2024" min="1940" max="2100"></div>
+            <div><label for="fScore">Minimum score</label>
+              <select id="fScore"><option value="">Any score</option><option value="60">6.0 and up</option><option value="70">7.0 and up</option><option value="75">7.5 and up</option><option value="80">8.0 and up</option><option value="85">8.5 and up</option></select></div>
+            <div><label for="fSort">Sort by</label>
+              <select id="fSort"><option value="POPULARITY_DESC">Most popular</option><option value="SCORE_DESC">Top rated</option><option value="TRENDING_DESC">Trending</option><option value="START_DATE_DESC">Newest</option><option value="START_DATE">Oldest</option><option value="TITLE_ROMAJI">Title A–Z</option></select></div>
+            <div><label for="fQuery">Keyword</label><input type="text" id="fQuery" placeholder="Title contains…" autocomplete="off"></div>
+          </div>
+        </div>
       </div>
       <div class="tabs hidden" id="mlTabs"></div>
       <div class="tabs hidden" id="schedTabs"></div>
@@ -451,8 +519,8 @@
             </div>
             <span id="embedTools" style="display:contents">
               <select id="provSelect" title="Source"></select>
-              <button class="btn iconbtn" id="starProv" title="Set this source as your default">&#9734;</button>
-              <button class="btn iconbtn" id="manageProv" title="Manage sources">&#9881;</button>
+              <button class="btn iconbtn sq" id="starProv" title="Set this source as your default">&#9734;</button>
+              <button class="btn iconbtn sq" id="manageProv" title="Manage sources">&#9881;</button>
             </span>
           </div>
           <div class="cgroup cr">
@@ -534,15 +602,9 @@
       <button class="flink" data-act="mylist">My Anime List</button>
       <button class="flink" data-act="az">A-Z Index</button>
     </nav>
-    <nav class="foot-col" aria-label="Genres">
+    <nav class="foot-col genres" aria-label="Genres">
       <h4>Genres</h4>
-      <div class="foot-genres">
-        <button class="gbtn" data-genre="Action">Action</button>
-        <button class="gbtn" data-genre="Romance">Romance</button>
-        <button class="gbtn" data-genre="Comedy">Comedy</button>
-        <button class="gbtn" data-genre="Fantasy">Fantasy</button>
-        <button class="gbtn" data-tag="Isekai">Isekai</button>
-      </div>
+      <div class="foot-genres" id="footGenres"></div>
     </nav>
   </div>
   <div class="foot-bottom">
@@ -770,7 +832,7 @@ function resume(h) {
 }
 
 /* ============ Home: cards, rows, hero ============ */
-function makeCard(a, onClick, extra) {
+function makeCard(a, onClick, extra, frac) {
   const c = el('div', 'card');
   const img = el('img'); img.loading = 'lazy'; img.alt = ''; img.src = a.coverImage.large; c.appendChild(img);
   if (score(a)) c.appendChild(el('span', 'badge', '★ ' + score(a)));
@@ -778,6 +840,7 @@ function makeCard(a, onClick, extra) {
   // Meta line under the (shortened) title: custom text if given, otherwise release year • format
   const meta = extra || [a.seasonYear, a.format && a.format.replace('_', ' ')].filter(Boolean).join(' • ');
   if (meta) c.appendChild(el('small', extra ? '' : 'meta', meta));
+  if (frac != null) { const pb = el('div', 'pbar'), bar = el('i'); bar.style.width = Math.round(Math.max(0, Math.min(1, frac)) * 100) + '%'; pb.appendChild(bar); c.appendChild(pb); }
   c.onclick = onClick; c._a = a;
   return c;
 }
@@ -1305,8 +1368,8 @@ function syncAniList(a, ep) {
 }
 
 /* ============ List pages (footer links, genres, browse, A-Z) ============ */
+const TAGS = ['Isekai', 'Reincarnation', 'School', 'Magic', 'Super Power', 'Military', 'Time Manipulation', 'Post-Apocalyptic', 'Cyberpunk', 'Vampire', 'Samurai', 'Martial Arts', 'Video Games', 'Cooking', 'Iyashikei', 'Survival'];   // AniList tags (Isekai is a tag, not a genre)
 const GENRES = ['Action', 'Adventure', 'Comedy', 'Drama', 'Ecchi', 'Fantasy', 'Horror', 'Mahou Shoujo', 'Mecha', 'Music', 'Mystery', 'Psychological', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports', 'Supernatural', 'Thriller'];
-GENRES.forEach(g => $('fGenre').appendChild(new Option(g, g)));
 const listState = { args: '', page: 1, token: 0 };
 
 // Switch to the home view's results area and reset it
@@ -1325,35 +1388,85 @@ function prepareList(title, filters) {
 }
 function openList(title, args, filters) {
   prepareList(title, filters);
-  Object.assign(listState, { args, page: 1 });
+  Object.assign(listState, { args, page: 1, browse: false });
   loadListPage();
 }
 async function loadListPage() {
   const tk = listState.token, p = listState.page;
   $('searchStatus').textContent = 'Loading…'; $('loadMore').classList.add('hidden');
   try {
-    const d = await gql(`query($p:Int){ Page(page:$p, perPage:36) { pageInfo { hasNextPage } ${M(listState.args)} } }`, { p });
+    const d = await gql(`query($p:Int){ Page(page:$p, perPage:36) { pageInfo { hasNextPage total } ${M(listState.args)} } }`, { p });
     if (tk !== listState.token) return;                       // a newer list/search replaced this one
     d.Page.media.forEach(a => { mediaCache.set(a.id, a); $('searchGrid').appendChild(makeCard(a, () => goWatch(a.id))); });
     $('searchStatus').textContent = $('searchGrid').children.length ? '' : 'No results found.';
     $('loadMore').classList.toggle('hidden', !d.Page.pageInfo.hasNextPage);
+    if (listState.browse) { flt.total = d.Page.pageInfo.total; updateFilterSummary(); }
   } catch (e) { if (tk === listState.token) $('searchStatus').textContent = 'Failed to load: ' + e.message; }
 }
 $('loadMore').onclick = () => { listState.page++; loadListPage(); };
 
-// Browse with Filters
-function filterArgs() {
-  const fmt = $('fFormat').value, g = $('fGenre').value, st = $('fStatus').value, yr = parseInt($('fYear').value, 10);
-  const a = ['sort: ' + $('fSort').value];
-  if (fmt) a.push('format: ' + fmt);
-  if (g) a.push('genre: ' + JSON.stringify(g));
-  if (st) a.push('status: ' + st);
-  if (yr >= 1940 && yr <= 2100) a.push('seasonYear: ' + yr);
+/* ---- Browse with filters: type, airing status, genres, tags, season/year, score, sort, keyword ---- */
+const TYPES = [['TV', 'TV'], ['TV_SHORT', 'TV Short'], ['MOVIE', 'Movie'], ['OVA', 'OVA'], ['ONA', 'ONA'], ['SPECIAL', 'Special'], ['MUSIC', 'Music']];
+const STATUSES = [['RELEASING', 'Airing'], ['FINISHED', 'Finished'], ['NOT_YET_RELEASED', 'Upcoming'], ['HIATUS', 'On hiatus'], ['CANCELLED', 'Cancelled']];
+const freshFilters = () => ({ types: new Set(), genres: new Set(), tags: new Set(), status: '', season: '', year: '', score: '', sort: 'POPULARITY_DESC', q: '', total: null });
+const flt = freshFilters();
+let browseTimer;
+function browseArgs() {
+  const a = ['sort: ' + flt.sort];
+  if (flt.q) a.push('search: ' + JSON.stringify(flt.q));
+  if (flt.types.size) a.push('format_in: [' + [...flt.types].join(', ') + ']');
+  if (flt.genres.size) a.push('genre_in: ' + JSON.stringify([...flt.genres]));
+  if (flt.tags.size) a.push('tag_in: ' + JSON.stringify([...flt.tags]));
+  if (flt.status) a.push('status: ' + flt.status);
+  if (flt.season) a.push('season: ' + flt.season);
+  if (/^\d{4}$/.test(flt.year)) a.push('seasonYear: ' + flt.year);
+  if (flt.score) a.push('averageScore_greater: ' + flt.score);
   return a.join(', ');
 }
-['fFormat', 'fGenre', 'fStatus', 'fSort', 'fYear'].forEach(id => $(id).addEventListener('change', () => {
-  listState.token++; Object.assign(listState, { args: filterArgs(), page: 1 }); $('searchGrid').innerHTML = ''; loadListPage();
-}));
+function activeFilterCount() { return flt.types.size + flt.genres.size + flt.tags.size + (flt.status ? 1 : 0) + (flt.season ? 1 : 0) + (/^\d{4}$/.test(flt.year) ? 1 : 0) + (flt.score ? 1 : 0) + (flt.q ? 1 : 0); }
+function updateFilterSummary() {
+  const n = activeFilterCount();
+  $('fSummary').textContent = (n ? `${n} filter${n > 1 ? 's' : ''} applied` : 'No filters') + (flt.total != null ? ` • ${flt.total.toLocaleString()} results` : '');
+  $('fReset').disabled = !n;
+}
+function chipGroup(box, items, isOn, toggle) {
+  box.innerHTML = '';
+  items.forEach(([v, l]) => {
+    const b = el('button', 'chip' + (isOn(v) ? ' on' : ''), l); b.type = 'button';
+    b.onclick = () => { toggle(v); renderFilterUI(); scheduleBrowse(); };
+    box.appendChild(b);
+  });
+}
+const flip = (set, v) => set.has(v) ? set.delete(v) : set.add(v);
+function renderFilterUI() {
+  chipGroup($('fTypes'), TYPES, v => flt.types.has(v), v => flip(flt.types, v));
+  chipGroup($('fStatus'), STATUSES, v => flt.status === v, v => { flt.status = flt.status === v ? '' : v; });
+  chipGroup($('fGenres'), GENRES.map(g => [g, g]), v => flt.genres.has(v), v => flip(flt.genres, v));
+  chipGroup($('fTags'), TAGS.map(t => [t, t]), v => flt.tags.has(v), v => flip(flt.tags, v));
+  $('fSeason').value = flt.season; $('fYear').value = flt.year; $('fScore').value = flt.score; $('fSort').value = flt.sort; $('fQuery').value = flt.q;
+  ['fSeason', 'fScore', 'fSort'].forEach(id => refreshSelect($(id)));
+  updateFilterSummary();
+}
+function scheduleBrowse() { clearTimeout(browseTimer); browseTimer = setTimeout(applyBrowse, 250); }
+function applyBrowse() {
+  flt.season = $('fSeason').value; flt.year = $('fYear').value.trim(); flt.score = $('fScore').value; flt.sort = $('fSort').value; flt.q = $('fQuery').value.trim();
+  listState.token++; Object.assign(listState, { args: browseArgs(), page: 1, browse: true });
+  $('searchGrid').innerHTML = ''; flt.total = null; updateFilterSummary(); loadListPage();
+}
+// pre = { genres, tags } starts a fresh filter set (footer genre buttons); no argument keeps whatever you had selected
+function showBrowse(pre) {
+  prepareList('Browse', true);
+  if (pre) { Object.assign(flt, freshFilters()); (pre.genres || []).forEach(g => flt.genres.add(g)); (pre.tags || []).forEach(t => flt.tags.add(t)); }
+  const single = [...flt.genres, ...flt.tags]; if (single.length === 1 && activeFilterCount() === 1) $('searchTitle').textContent = single[0];
+  $('filterBar').classList.remove('collapsed'); $('fToggle').textContent = 'Hide filters';
+  renderFilterUI();
+  Object.assign(listState, { args: browseArgs(), page: 1, browse: true });
+  flt.total = null; updateFilterSummary(); loadListPage();
+}
+['fSeason', 'fScore', 'fSort'].forEach(id => $(id).addEventListener('change', applyBrowse));
+['fYear', 'fQuery'].forEach(id => $(id).addEventListener('input', scheduleBrowse));
+$('fReset').onclick = () => { Object.assign(flt, freshFilters()); renderFilterUI(); applyBrowse(); };
+$('fToggle').onclick = () => { const c = $('filterBar').classList.toggle('collapsed'); $('fToggle').textContent = c ? 'Show filters' : 'Hide filters'; };
 
 // My List page: AniList's lists when connected, otherwise the list saved in this browser
 const ML_LIGHT = 'id idMal title{romaji english native} coverImage{large} format seasonYear averageScore episodes';
@@ -1387,7 +1500,7 @@ function renderMyList() {
     : myList.source === 'anilist' ? 'Synced with your AniList.' : 'Saved in this browser. Connect AniList in Settings to sync it.';
   shown.forEach(i => {
     const m = i.media, eps = m.episodes;
-    grid.appendChild(makeCard(m, () => goWatch(m.id), alStatusLabel(i.status) + (i.progress ? ` • Ep ${i.progress}${eps ? '/' + eps : ''}` : '')));
+    grid.appendChild(makeCard(m, () => goWatch(m.id), alStatusLabel(i.status) + (i.progress ? ` • Ep ${i.progress}${eps ? '/' + eps : ''}` : ''), i.status === 'COMPLETED' ? 1 : (eps && i.progress ? i.progress / eps : null)));
   });
 }
 async function showMyListPage() {
@@ -1421,7 +1534,7 @@ const POP = 'sort: POPULARITY_DESC';
 const ACTIONS = {
   all:       () => openList('All Series', 'format_in: [TV, TV_SHORT], ' + POP),
   movies:    () => openList('Movies', 'format: MOVIE, ' + POP),
-  browse:    () => { ['fFormat', 'fGenre', 'fStatus', 'fYear'].forEach(id => $(id).value = ''); $('fSort').value = 'POPULARITY_DESC'; ['fFormat', 'fGenre', 'fStatus', 'fSort'].forEach(id => refreshSelect($(id))); openList('Browse', filterArgs(), true); },
+  browse:    () => showBrowse(),
   airing:    () => openList('Top Airing', 'status: RELEASING, ' + POP),
   popular:   () => openList('Most Popular', POP),
   completed: () => openList('Completed', 'status: FINISHED, ' + POP),
@@ -1432,8 +1545,11 @@ const ACTIONS = {
   home:      () => { $('search').value = ''; listState.token++; $('searchPage').classList.add('hidden'); $('home').classList.remove('hidden'); showView('home'); if (location.hash !== '#home') location.hash = '#home'; renderContinue(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 };
 document.querySelectorAll('[data-act]').forEach(b => b.onclick = () => { ACTIONS[b.dataset.act](); setTab(b.dataset.act); });
-document.querySelectorAll('[data-genre]').forEach(b => b.onclick = () => openList(b.dataset.genre, `genre: ${JSON.stringify(b.dataset.genre)}, ${POP}`));
-document.querySelectorAll('[data-tag]').forEach(b => b.onclick = () => openList(b.dataset.tag, `tag: ${JSON.stringify(b.dataset.tag)}, ${POP}`));   // Isekai is an AniList tag, not a genre
+// Footer: every genre plus a few popular tags; each opens Browse with that filter already applied (so you can refine it)
+const footGenres = $('footGenres');
+GENRES.forEach(g => { const b = el('button', 'gbtn', g); b.onclick = () => { showBrowse({ genres: [g] }); setTab(''); }; footGenres.appendChild(b); });
+TAGS.slice(0, 6).forEach(t => { const b = el('button', 'gbtn', t); b.title = 'Tag'; b.onclick = () => { showBrowse({ tags: [t] }); setTab(''); }; footGenres.appendChild(b); });
+$('filterBtn').onclick = () => { showBrowse(); setTab(''); };
 /* ============ Watched episodes (site history + AniList progress) ============ */
 const alEntries = new Map();     // AniList list entries: mediaId -> { progress, status }
 const histMedia = h => ({ title: h.names || { romaji: h.title }, coverImage: { large: h.poster } });
@@ -1834,7 +1950,7 @@ $('randBtn').onclick = async () => { const b = $('randBtn'); b.disabled = true; 
 
 /* ============ Init ============ */
 fillStatus($('alStatusSel'), true); fillStatus($('alDefaultStatus')); $('alDefaultStatus').value = defaultAlStatus();
-['provSelect', 'fFormat', 'fGenre', 'fStatus', 'fSort'].forEach(id => enhanceSelect($(id)));
+['provSelect', 'fSeason', 'fScore', 'fSort'].forEach(id => enhanceSelect($(id)));
 enhanceSelect($('alStatusSel'), { block: true }); enhanceSelect($('alDefaultStatus'), { block: true });
 enhanceSelect($('pType'), { block: true });
 enhanceSelect($('seasonSelect'), { block: true });

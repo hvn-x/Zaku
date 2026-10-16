@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Anime-X</title>
+<title>Zaku</title>
 <link rel="icon" type="image/x-icon" href="Zaku.ico">
 <link rel="icon" type="image/svg+xml" href="Zaku.svg">
 <style>
@@ -117,10 +117,10 @@
   .row { display:flex; gap:8px; margin:10px 0; }
 
   /* ============ Settings dialog ============ */
-  .overlay { position:fixed; inset:0; z-index:20; display:none; overflow-y:auto; background:rgba(8,8,10,.8); backdrop-filter:blur(10px); }
+  .overlay { position:fixed; inset:0; z-index:20; display:none; overflow-y:auto; overscroll-behavior:contain; background:rgba(8,8,10,.92); }   /* no backdrop-filter here: blurring the page (and video) on every scroll frame is what made it laggy */
   .overlay.open { display:block; animation:fade .2s ease; }
   @keyframes fade { from { opacity:0 } to { opacity:1 } }
-  .dialog { max-width:720px; margin:6vh auto; padding:24px; border-radius:20px; background:rgba(28,28,34,.92); border:1px solid var(--glass-border); backdrop-filter:var(--blur); -webkit-backdrop-filter:var(--blur); box-shadow:0 30px 80px rgba(0,0,0,.6); }
+  .dialog { max-width:720px; margin:6vh auto; padding:24px; border-radius:20px; background:#1c1c22; border:1px solid var(--glass-border); box-shadow:0 20px 50px rgba(0,0,0,.5); }
   .dialog h3 { margin:0 0 4px; font-size:1.3rem; }
   .plist { display:grid; gap:8px; margin:16px 0; }
   .prov { display:flex; gap:12px; align-items:center; padding:12px 14px; border-radius:12px; background:var(--glass); border:1px solid var(--glass-border); }
@@ -172,11 +172,6 @@
   .tab:hover { color:#fff; background:var(--glass); }
   .tab.active { color:#fff; }
   .tab.active::after { content:""; position:absolute; left:12px; right:12px; bottom:1px; height:2px; border-radius:2px; background:linear-gradient(90deg,var(--main),var(--accent)); }
-
-  /* ============ Custom logo ============ */
-  .logo-img { height:34px; width:auto; max-width:220px; display:block; object-fit:contain; }
-  #flogo .logo-img { height:44px; max-width:260px; }
-  .logo-preview { max-height:56px; max-width:100%; object-fit:contain; background:rgba(255,255,255,.04); border-radius:10px; padding:8px; justify-self:start; }
 
   /* ============ Airing schedule ============ */
   .sched { display:grid; gap:10px; max-width:920px; }
@@ -234,6 +229,24 @@
   .plist .label { margin:10px 0 0; }
   .box > label { font-size:.78rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); font-weight:700; }
   #alBox { margin-bottom:16px; }
+
+  /* ============ Sidebar fills the height of the player column + recommendations ============ */
+  .recs-box { margin-top:18px; display:flex; flex-direction:column; min-height:0; }
+  .recs { display:grid; gap:8px; align-content:start; overflow:auto; scrollbar-width:thin; max-height:420px; padding:2px; }
+  .rec { display:flex; align-items:center; gap:12px; padding:8px; border-radius:12px; background:var(--glass); border:1px solid var(--glass-border); cursor:pointer; transition:border-color .15s, background .15s; }
+  .rec:hover { border-color:var(--accent); background:var(--glass-hi); }
+  .rec img { width:42px; height:58px; object-fit:cover; border-radius:8px; background:#111; flex:none; }
+  .rec .t { min-width:0; }
+  .rec .t b { display:block; font-size:.88rem; line-height:1.3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .rec .t small { font-size:.75rem; }
+  @media (min-width:1100px) {
+    .sidewrap { position:relative; min-height:480px; }
+    .side { position:absolute; inset:0; display:flex; flex-direction:column; min-height:0; overflow:hidden; }
+    .side .eps { flex:0 1 auto; max-height:46%; min-height:96px; }
+    .side.norecs .eps { flex:1; max-height:none; }
+    .recs-box { flex:1; }
+    .recs { flex:1; min-height:0; max-height:none; }
+  }
 
   /* ============ Ad-blocker banner ============ */
   .adbanner { position:fixed; left:50%; bottom:18px; transform:translateX(-50%); z-index:40; width:min(960px,calc(100vw - 28px)); display:flex; align-items:center; gap:14px; padding:14px 16px; border-radius:16px;
@@ -358,7 +371,7 @@
         </div>
       </section>
 
-      <aside class="side">
+      <div class="sidewrap"><aside class="side" id="side">
         <div id="alBox" class="hidden">
           <div class="label">AniList Status</div>
           <select id="alStatusSel"></select>
@@ -377,7 +390,11 @@
         </div>
         <div class="tabs" id="tabs"></div>
         <div class="eps" id="eps"></div>
-      </aside>
+        <div class="recs-box hidden" id="recsBox">
+          <div class="label">You might also like</div>
+          <div class="recs" id="recs"></div>
+        </div>
+      </aside></div>
     </div>
   </div>
 </main>
@@ -439,23 +456,6 @@
 <div class="overlay" id="settings">
   <div class="dialog">
     <h3>Settings</h3>
-
-    <!-- Branding / logo -->
-    <div class="box">
-      <h4>Logo</h4>
-      <small>Replace the text logo with your own image (PNG, JPG, WebP or SVG). It is stored only in this browser.</small>
-      <img id="logoPreview" class="logo-preview hidden" alt="">
-      <div class="row" style="margin:0">
-        <button class="btn" id="logoUpload">Upload image</button>
-        <input type="file" id="logoFile" accept="image/*" class="hidden">
-        <button class="btn hidden" id="logoRemove">Remove logo</button>
-      </div>
-      <div class="row" style="margin:0">
-        <input type="text" id="logoUrl" placeholder="…or paste an image URL">
-        <button class="btn" id="logoUrlBtn">Use URL</button>
-      </div>
-      <div class="err" id="logoErr"></div>
-    </div>
 
     <!-- AniList integration -->
     <div class="box">
@@ -750,7 +750,7 @@ async function loadWatch(id, startEp) {
   state.anime = a; state.count = episodeCount(a); state.tab = 0;
   renderWatchHero(a);
   document.title = titleOf(a) + ' – Zaku';
-  renderEpisodes(); updateNav(); refreshAlEntries([id]); renderAlStatus();
+  renderEpisodes(); updateNav(); refreshAlEntries([id]); renderAlStatus(); loadRecs(a);
 
   // Season chain: reuse it if this entry is already part of it, otherwise (re)build
   if (!state.chain.some(x => x.id === id)) {
@@ -1262,6 +1262,29 @@ async function loadWatchedRow() {
   } catch (e) { /* ignore */ }
 }
 
+/* ============ Recommendations (fills the sidebar under the episode list) ============ */
+const recCache = new Map();
+async function loadRecs(a) {
+  const box = $('recsBox'), list = $('recs'), side = $('side');
+  list.innerHTML = ''; box.classList.add('hidden'); side.classList.add('norecs');
+  let recs = recCache.get(a.id);
+  if (!recs) {
+    try {
+      const d = await gql(`query($id:Int){ Media(id:$id){ recommendations(perPage:12, sort:RATING_DESC){ nodes{ mediaRecommendation{ id isAdult title{romaji english} coverImage{large} format seasonYear averageScore } } } } }`, { id: a.id });
+      recs = d.Media.recommendations.nodes.map(n => n.mediaRecommendation).filter(m => m && !m.isAdult);
+      recCache.set(a.id, recs);
+    } catch (e) { return; }
+  }
+  if (!state.anime || state.anime.id !== a.id || !recs.length) return;     // navigated away, or nothing to show
+  recs.forEach(m => {
+    const row = el('div', 'rec'), img = el('img'), t = el('div', 't'), b = el('b', '', shortTitle(m, 44));
+    img.loading = 'lazy'; img.alt = ''; img.src = m.coverImage.large; b.title = titleOf(m);
+    t.append(b, el('small', '', [m.format && m.format.replace('_', ' '), m.seasonYear, score(m) && '★ ' + score(m)].filter(Boolean).join(' • ')));
+    row.append(img, t); row.onclick = () => goWatch(m.id); list.appendChild(row);
+  });
+  box.classList.remove('hidden'); side.classList.remove('norecs');
+}
+
 /* ============ AniList status (you choose it; episode progress stays automatic) ============ */
 const AL_STATUSES = [['CURRENT', 'Watching'], ['PLANNING', 'Planning'], ['COMPLETED', 'Completed'], ['PAUSED', 'Paused'], ['DROPPED', 'Dropped'], ['REPEATING', 'Rewatching']];
 const alStatusLabel = v => (AL_STATUSES.find(x => x[0] === v) || [v, v])[1];
@@ -1370,49 +1393,6 @@ async function loadSchedule() {
   });
 }
 
-/* ============ Custom logo (replaces the text logo) ============ */
-const LOGO_KEY = 'anifin.logo';
-// Remember each logo element's ORIGINAL markup separately (header = plain text with an inline gradient,
-// footer = <span class="gradient-text">), so removing/never setting a custom logo never flattens the footer.
-const logoDefaults = new Map([[$('logo'), $('logo').innerHTML], [$('flogo'), $('flogo').innerHTML]]);
-function applyLogo() {
-  const src = localStorage.getItem(LOGO_KEY);
-  [$('logo'), $('flogo')].forEach(h => {
-    h.innerHTML = logoDefaults.get(h);
-    if (!src) return;
-    const img = el('img', 'logo-img'); img.alt = 'Zaku'; img.src = src;
-    img.onerror = () => { h.innerHTML = logoDefaults.get(h); };       // broken URL → fall back to the text logo
-    h.innerHTML = ''; h.appendChild(img);
-  });
-  $('logoPreview').classList.toggle('hidden', !src); if (src) $('logoPreview').src = src;
-  $('logoRemove').classList.toggle('hidden', !src);
-}
-function saveLogo(src) {
-  try { localStorage.setItem(LOGO_KEY, src); $('logoErr').textContent = ''; applyLogo(); }
-  catch { $('logoErr').textContent = 'That image is too large to store. Try a smaller one.'; }
-}
-$('logoUpload').onclick = () => $('logoFile').click();
-$('logoFile').onchange = e => {
-  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
-  if (f.size > 5 * 1024 * 1024) return $('logoErr').textContent = 'Image is over 5 MB.';
-  if (f.type === 'image/svg+xml') { const r = new FileReader(); r.onload = () => saveLogo(r.result); r.readAsDataURL(f); return; }
-  const url = URL.createObjectURL(f), img = new Image();       // rasters are downscaled to keep storage small
-  img.onload = () => {
-    const k = Math.min(1, 120 / img.height, 480 / img.width), c = document.createElement('canvas');
-    c.width = Math.max(1, Math.round(img.width * k)); c.height = Math.max(1, Math.round(img.height * k));
-    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-    URL.revokeObjectURL(url); saveLogo(c.toDataURL('image/png'));
-  };
-  img.onerror = () => { URL.revokeObjectURL(url); $('logoErr').textContent = 'Could not read that image.'; };
-  img.src = url;
-};
-$('logoUrlBtn').onclick = () => {
-  const u = $('logoUrl').value.trim();
-  if (!/^https?:\/\//i.test(u)) return $('logoErr').textContent = 'URL must start with http:// or https://';
-  saveLogo(u); $('logoUrl').value = '';
-};
-$('logoRemove').onclick = () => { localStorage.removeItem(LOGO_KEY); applyLogo(); };
-
 /* ============ Ad-blocker check (light, local-only) ============ */
 // Inserts an invisible "bait" element with classes that ad-blocker cosmetic filters hide.
 // If it gets hidden/removed, a blocker is active. No third-party requests are made.
@@ -1450,7 +1430,7 @@ enhanceSelect($('seasonSelect'), { block: true });
 renderProvSelect();
 loadSiteProviders();
 renderAl();
-applyLogo();
+localStorage.removeItem('anifin.logo');      // clean up the old custom-logo setting
 if (alToken()) {   // silently re-check a saved token so the badge reflects reality
   gql('query{ Viewer { id name } }', {}, alToken())
     .then(d => {

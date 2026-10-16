@@ -315,6 +315,19 @@
   .pchecks .c-ok { color:#7ee2a0; } .pchecks .c-warn { color:var(--gold); } .pchecks .c-fail { color:#ff8a8a; }
   .pactions { display:flex; gap:8px; flex-wrap:wrap; }
 
+  /* ============ Episode list view (names) ============ */
+  .eprow { gap:10px; flex-wrap:wrap; }
+  .eps.list { display:flex; flex-direction:column; gap:6px; max-height:340px; }
+  .eps.list button { width:100%; display:flex; align-items:center; gap:12px; padding:9px 12px; text-align:left; }
+  .eps.list .n { flex:none; min-width:30px; font-weight:800; color:var(--gold); font-variant-numeric:tabular-nums; }
+  .eps.list .nm { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; font-size:.84rem; }
+  .eps.list button.seen .n { color:var(--muted); }
+  .eps.list button.active .n { color:#fff; }
+  .eps.list button.seen::after { position:static; margin-left:4px; font-size:.85rem; }
+  .rb.stack { background:rgba(249,212,35,.18); color:var(--gold); }
+  .rec.stacked { box-shadow:5px 5px 0 -1px rgba(255,255,255,.06), 10px 10px 0 -2px rgba(255,255,255,.035); }
+  .rec.stacked:hover { box-shadow:5px 5px 0 -1px rgba(255,255,255,.06), 10px 10px 0 -2px rgba(255,255,255,.035), 0 10px 26px rgba(255,75,75,.18); }
+
   /* ============ Header: random + EN/JP ============ */
   #randBtn svg { display:block; }
   #randBtn.spin svg { animation:spin .7s linear infinite; }
@@ -472,6 +485,10 @@
             <button class="btn" data-f="seen">Watched</button>
             <button class="btn" data-f="unseen">Unwatched</button>
           </div>
+          <div class="seg small" id="epView" title="Episode layout">
+            <button class="btn active" data-v="list">List</button>
+            <button class="btn" data-v="grid">Grid</button>
+          </div>
         </div>
         <div class="tabs" id="tabs"></div>
         <div class="eps" id="eps"></div>
@@ -582,6 +599,7 @@
         <select id="prefTitle"><option value="english">English</option><option value="romaji">Japanese (romaji)</option><option value="native">Japanese (native script)</option></select>
         <small>You can also switch quickly with the EN / JP toggle in the top bar.</small>
         <label class="chk"><input type="checkbox" id="prefAdWarn"> Show the ad-blocker reminder when no blocker is detected</label>
+        <label class="chk"><input type="checkbox" id="prefEpNames"> Show episode names (fetched from the Jikan / MyAnimeList API)</label>
       </div>
     </section>
 
@@ -589,7 +607,7 @@
     <section class="spanel hidden" data-panel="library">
       <div class="box">
         <h4>Season grouping</h4>
-        <label class="chk"><input type="checkbox" id="groupToggle"> Group seasons of the same show into one card (Already Watched). Movies, OVAs and specials always stay separate.</label>
+        <label class="chk"><input type="checkbox" id="groupToggle"> Group seasons of the same show into one card (Already Watched and recommendations). Movies, OVAs and specials always stay separate.</label>
       </div>
       <div class="box">
         <h4>Local data</h4>
@@ -880,7 +898,7 @@ async function loadWatch(id, startEp) {
   state.anime = a; state.count = episodeCount(a); state.tab = 0;
   renderWatchHero(a);
   document.title = titleOf(a) + ' – Zaku';
-  renderEpisodes(); updateNav(); refreshAlEntries([id]); renderAlStatus(); loadRecs(a);
+  renderEpisodes(); updateNav(); refreshAlEntries([id]); renderAlStatus(); loadRecs(a); loadEpNames(a);
 
   // Season chain: reuse it if this entry is already part of it, otherwise (re)build
   if (!state.chain.some(x => x.id === id)) {
@@ -934,7 +952,9 @@ $('seasonSelect').onchange = e => goWatch(+e.target.value, 1);
 
 /* Episode grid: watched styling, All/Watched/Unwatched filter, batch tabs (1-100, 101-200, …) */
 function renderEpisodes() {
-  const n = state.count, tabs = $('tabs'), grid = $('eps');
+  const n = state.count, tabs = $('tabs'), grid = $('eps'), view = epView();
+  grid.className = 'eps ' + view;
+  document.querySelectorAll('#epView .btn').forEach(b => b.classList.toggle('active', b.dataset.v === view));
   tabs.innerHTML = ''; grid.innerHTML = '';
   if (!n) { grid.textContent = 'No episode count available.'; $('epStat').textContent = ''; return; }
   const seen = state.anime ? watchedSet(state.anime) : new Set();
@@ -955,11 +975,16 @@ function renderEpisodes() {
   } else for (let i = 1; i <= n; i++) if ((f === 'seen') === seen.has(i)) list.push(i);
   if (!list.length) grid.textContent = f === 'seen' ? 'Nothing watched yet.' : 'All caught up!';
   list.forEach(i => {
-    const b = el('button', ((i === state.ep ? 'active ' : '') + (seen.has(i) ? 'seen' : '')).trim(), i);
+    const nm = state.anime ? epName(state.anime.id, i) : '', cls = ((i === state.ep ? 'active ' : '') + (seen.has(i) ? 'seen' : '')).trim();
+    let b;
+    if (view === 'list') { b = el('button', cls); b.append(el('span', 'n', i), el('span', 'nm', nm || 'Episode ' + i)); if (nm) b.title = `${i}. ${nm}`; }
+    else { b = el('button', cls, i); if (nm) b.title = `${i}. ${nm}`; }
     b.onclick = () => selectEpisode(i);
     grid.appendChild(b);
   });
 }
+const epView = () => store.get('anifin.epView', 'list');
+document.querySelectorAll('#epView .btn').forEach(b => b.onclick = () => { store.set('anifin.epView', b.dataset.v); renderEpisodes(); });
 document.querySelectorAll('#epFilter .btn').forEach(b => b.onclick = () => { state.epFilter = b.dataset.f; renderEpisodes(); });
 
 function selectEpisode(n) {
@@ -974,7 +999,7 @@ function updateNav() {
   $('nextBtn').disabled = !(state.ep && state.ep < state.count);
   const p = getProvider(), np = $('nowPlaying'); np.innerHTML = '';
   if (!state.ep) np.textContent = 'No episode selected';
-  else { np.append('Now playing: '); np.appendChild(el('b', '', 'Episode ' + state.ep)); np.append(` • ${state.lang.toUpperCase()}${p ? ' • ' + p.name : ''}`); }
+  else { const nm = state.anime ? epName(state.anime.id, state.ep) : ''; np.append('Now playing: '); np.appendChild(el('b', '', 'Episode ' + state.ep + (nm ? ' – ' + clip(nm, 60) : ''))); np.append(` • ${state.lang.toUpperCase()}${p ? ' • ' + p.name : ''}`); }
 }
 $('prevBtn').onclick = () => selectEpisode(state.ep - 1);
 $('nextBtn').onclick = () => selectEpisode(state.ep + 1);
@@ -1463,6 +1488,44 @@ async function loadWatchedRow() {
   } catch (e) { /* ignore */ }
 }
 
+/* ============ Episode names ============ */
+// Primary source: Jikan (MyAnimeList data, public API, 100 episodes per page). Fallback: AniList streamingEpisodes.
+const epNameCache = new Map();    // AniList id -> { names: Map(ep -> { t, jp, ro }), running, done }
+function epName(id, ep) {
+  if (!pref.get('epnames', true)) return '';
+  const n = epNameCache.get(id)?.names.get(ep); if (!n) return '';
+  const t = ((titleLang === 'native' ? (n.jp || n.t) : titleLang === 'romaji' ? (n.ro || n.t) : n.t) || '').trim();
+  return /^episode\s*\d+$/i.test(t) ? '' : t;          // ignore placeholder names like "Episode 12"
+}
+async function loadEpNames(a) {
+  if (!pref.get('epnames', true)) return;
+  const id = a.id; let rec = epNameCache.get(id);
+  if (rec && (rec.done || rec.running)) return;
+  if (!rec) { rec = { names: new Map(), running: false, done: false }; epNameCache.set(id, rec); }
+  rec.running = true;
+  const here = () => state.anime && state.anime.id === id, refresh = () => { if (here()) { renderEpisodes(); updateNav(); } };
+  try {
+    if (a.idMal) {
+      for (let p = 1; p <= 12; p++) {                                   // up to 1,200 episodes, ~2 requests/second
+        if (!here()) break;
+        const r = await fetch(`https://api.jikan.moe/v4/anime/${a.idMal}/episodes?page=${p}`);
+        if (!r.ok) break;
+        const j = await r.json();
+        (j.data || []).forEach(e => rec.names.set(e.mal_id, { t: e.title, jp: e.title_japanese, ro: e.title_romanji }));
+        refresh();
+        if (!j.pagination?.has_next_page) { rec.done = true; break; }
+        await new Promise(res => setTimeout(res, 450));
+      }
+    }
+    if (!rec.names.size && here()) {                                     // fallback: titles AniList gets from streaming sites
+      const d = await gql(`query($id:Int){ Media(id:$id){ streamingEpisodes{ title } } }`, { id });
+      (d.Media?.streamingEpisodes || []).forEach(se => { const m = /^(?:episode|ep\.?)\s*(\d+)\s*[-–:]\s*(.+)$/i.exec(se.title || ''); if (m) rec.names.set(+m[1], { t: m[2].trim() }); });
+      rec.done = true; refresh();
+    }
+  } catch (e) { /* names are optional */ }
+  rec.running = false;
+}
+
 /* ============ Recommendations (fills the sidebar under the episode list) ============ */
 const recCache = new Map();
 async function loadRecs(a) {
@@ -1471,19 +1534,25 @@ async function loadRecs(a) {
   let recs = recCache.get(a.id);
   if (!recs) {
     try {
-      const d = await gql(`query($id:Int){ Media(id:$id){ recommendations(perPage:12, sort:RATING_DESC){ nodes{ mediaRecommendation{ id isAdult title{romaji english native} coverImage{large} format seasonYear averageScore genres } } } } }`, { id: a.id });
+      const d = await gql(`query($id:Int){ Media(id:$id){ recommendations(perPage:20, sort:RATING_DESC){ nodes{ mediaRecommendation{ id isAdult title{romaji english native} coverImage{large} format seasonYear averageScore genres relations{ edges{ relationType node{ id format } } } } } } } }`, { id: a.id });
       recs = d.Media.recommendations.nodes.map(n => n.mediaRecommendation).filter(m => m && !m.isAdult);
       recCache.set(a.id, recs);
     } catch (e) { return; }
   }
   if (!state.anime || state.anime.id !== a.id || !recs.length) return;     // navigated away, or nothing to show
-  recs.forEach(m => {
-    const row = el('div', 'rec'), img = el('img'), t = el('div', 't'), b = el('b', '', shortTitle(m, 64)), badges = el('div', 'badges'), genres = el('div', 'genres');
+  // one card per franchise: seasons of the same show are grouped (and the show you're watching is left out)
+  const mine = new Set([a.id, ...state.chain.map(x => x.id)]);
+  const groups = groupSeasons(recs.filter(m => !mine.has(m.id))).slice(0, 10);
+  if (!groups.length) return;
+  groups.forEach(g => {
+    const m = g.main, n = g.items.length;
+    const row = el('div', 'rec' + (n > 1 ? ' stacked' : '')), img = el('img'), t = el('div', 't'), b = el('b', '', shortTitle(m, 64)), badges = el('div', 'badges'), genres = el('div', 'genres');
     img.loading = 'lazy'; img.alt = ''; img.src = m.coverImage.large; b.title = titleOf(m);
     if (score(m)) badges.appendChild(el('span', 'rb score', '★ ' + score(m)));
     if (m.format) badges.appendChild(el('span', 'rb fmt', m.format.replace('_', ' ')));
     if (m.seasonYear) badges.appendChild(el('span', 'rb', m.seasonYear));
-    (m.genres || []).slice(0, 3).forEach(g => genres.appendChild(el('span', 'rb gen', g)));
+    if (n > 1) badges.appendChild(el('span', 'rb stack', n + ' seasons'));
+    (m.genres || []).slice(0, 3).forEach(gn => genres.appendChild(el('span', 'rb gen', gn)));
     t.append(b, badges); if (genres.children.length) t.appendChild(genres);
     row.append(img, t); row._a = m; row.onclick = () => goWatch(m.id); list.appendChild(row);
   });
@@ -1644,7 +1713,7 @@ function retitle() {
     const b = r.querySelector('b'); b.textContent = shortTitle(r._a, r.classList.contains('rec') ? 64 : 56); b.title = titleOf(r._a);
   });
   if (heroItems.length) showHero(heroIdx);
-  if (state.anime) { renderWatchHero(state.anime); renderSeasons(); document.title = titleOf(state.anime) + ' – Zaku'; }
+  if (state.anime) { renderWatchHero(state.anime); renderSeasons(); renderEpisodes(); updateNav(); document.title = titleOf(state.anime) + ' – Zaku'; }
 }
 function setTitleLang(v) { titleLang = v; store.set('anifin.titleLang', v); syncTitleToggle(); retitle(); }
 document.querySelectorAll('#titleLang .btn').forEach(b => b.onclick = () => setTitleLang(b.dataset.v === 'romaji' && titleLang === 'native' ? 'native' : b.dataset.v));
@@ -1654,6 +1723,7 @@ $('prefTitle').onchange = e => setTitleLang(e.target.value);
 const pref = { get: (k, d) => store.get('anifin.pref.' + k, d), set: (k, v) => store.set('anifin.pref.' + k, v) };
 $('prefAudio').onchange = e => { pref.set('audio', e.target.value); setLang(e.target.value); };
 $('prefOpen').onchange = e => pref.set('open', e.target.value);
+$('prefEpNames').onchange = e => { pref.set('epnames', e.target.checked); if (state.anime) { if (e.target.checked) loadEpNames(state.anime); renderEpisodes(); updateNav(); } };
 $('prefAdWarn').onchange = e => { pref.set('adwarn', e.target.checked); if (!e.target.checked) hideAdBanner(false); };
 $('clearHist').onclick = () => { if (!confirm('Clear your Continue Watching list?')) return; store.set('anifin.history', []); renderContinue(); toast('Continue Watching cleared'); };
 $('clearWatched').onclick = () => {
@@ -1690,6 +1760,7 @@ $('groupToggle').onchange = e => { store.set('anifin.group', e.target.checked); 
 $('prefAudio').value = state.lang; refreshSelect($('prefAudio'));
 $('prefOpen').value = pref.get('open', 'manual'); refreshSelect($('prefOpen'));
 $('prefAdWarn').checked = pref.get('adwarn', true) !== false;
+$('prefEpNames').checked = pref.get('epnames', true) !== false;
 $('subBtn').classList.toggle('active', state.lang === 'sub'); $('dubBtn').classList.toggle('active', state.lang === 'dub');
 syncTitleToggle();
 checkAdBlock();

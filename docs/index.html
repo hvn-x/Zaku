@@ -97,7 +97,7 @@
   .wv-info p.open { -webkit-line-clamp:unset; max-height:200px; overflow:auto; display:block; }
   .watch { display:grid; grid-template-columns:minmax(0,1fr); gap:24px; align-items:start; padding:0 var(--gutter); position:relative; z-index:3; }
   @media (min-width:1100px) { .watch { grid-template-columns:minmax(0,1fr) clamp(360px,30vw,500px); } }
-  .side { padding:20px; border-radius:18px; background:rgba(255,255,255,.04); border:1px solid var(--glass-border); backdrop-filter:var(--blur); -webkit-backdrop-filter:var(--blur); }
+  .side { padding:20px; border-radius:18px; background:#15151a; border:1px solid var(--glass-border); }   /* solid (no backdrop blur) so the scrolling stays smooth */
   .label { margin:0 0 8px; font-size:.78rem; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); font-weight:700; }
   .side .label:not(:first-child) { margin-top:18px; }
   .tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
@@ -235,6 +235,14 @@
   .eps { padding:4px; }
   .recs-box { margin-top:22px; padding-top:18px; border-top:1px solid var(--glass-border); }
   .recs { display:flex; flex-direction:column; gap:14px; }
+  /* Wide screens: the sidebar is exactly as tall as the player column and scrolls inside itself when it has more */
+  @media (min-width:1100px) {
+    .sidewrap { position:relative; align-self:stretch; min-height:480px; }
+    .side { position:absolute; inset:0; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:var(--main) transparent; }
+    .side::-webkit-scrollbar { width:8px; }
+    .side::-webkit-scrollbar-thumb { background:var(--main); border-radius:8px; }
+    .side::-webkit-scrollbar-track { background:transparent; }
+  }
   .rec { display:flex; align-items:stretch; gap:16px; padding:14px; border-radius:16px; cursor:pointer;
     background:linear-gradient(135deg,rgba(255,75,75,.08),rgba(255,255,255,.02) 60%); border:1px solid var(--glass-border); transition:border-color .15s, transform .15s, box-shadow .15s; }
   .rec:hover { border-color:var(--gold); transform:translateY(-2px); box-shadow:0 10px 26px rgba(255,75,75,.18); }
@@ -307,7 +315,15 @@
   .pchecks .c-ok { color:#7ee2a0; } .pchecks .c-warn { color:var(--gold); } .pchecks .c-fail { color:#ff8a8a; }
   .pactions { display:flex; gap:8px; flex-wrap:wrap; }
 
-  /* ============ Ad-blocker banner ============ */  /* ============ Ad-blocker banner ============ */
+  /* ============ Header: random + EN/JP ============ */
+  #randBtn svg { display:block; }
+  #randBtn.spin svg { animation:spin .7s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  #titleLang { flex:none; }
+  .box > label.chk { text-transform:none; letter-spacing:0; color:var(--text); font-weight:400; font-size:.9rem; }
+
+  /* ============ Ad-blocker banner ============ */
+
   .adbanner { position:fixed; left:50%; bottom:18px; transform:translateX(-50%); z-index:40; width:min(960px,calc(100vw - 28px)); display:flex; align-items:center; gap:14px; padding:14px 16px; border-radius:16px;
     background:rgba(24,24,30,.94); border:1px solid var(--accent); box-shadow:0 18px 50px rgba(0,0,0,.65); backdrop-filter:var(--blur); -webkit-backdrop-filter:var(--blur); animation:rise .3s ease; }
   .adbanner .shield { font-size:1.6rem; }
@@ -340,6 +356,11 @@
   <div class="searchbox">
     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
     <input type="search" id="search" placeholder="Search anime by title…" autocomplete="off">
+  </div>
+  <button class="btn iconbtn" id="randBtn" title="Random anime" aria-label="Random anime"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.1" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.1" fill="currentColor"/><circle cx="12" cy="12" r="1.1" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.1" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.1" fill="currentColor"/></svg></button>
+  <div class="seg small" id="titleLang" title="Title language">
+    <button class="btn active" data-v="english">EN</button>
+    <button class="btn" data-v="romaji">JP</button>
   </div>
   <span class="albadge ok hidden" id="alBadge" title="AniList sync is active">&#9679; AniList</span>
   <button class="btn iconbtn" id="openSettings" title="Settings">&#9881; Settings</button>
@@ -522,6 +543,7 @@
     <div class="dhead"><h3>Settings</h3><button class="adx" id="sClose" aria-label="Close">&times;</button></div>
     <div class="stabs" role="tablist">
       <button class="stab active" data-panel="account">Account &amp; Sync</button>
+      <button class="stab" data-panel="prefs">Preferences</button>
       <button class="stab" data-panel="library">Library Rules</button>
       <button class="stab" data-panel="sources">Embed &amp; Provider Sources</button>
     </div>
@@ -543,11 +565,39 @@
       </div>
     </section>
 
+    <!-- Preferences -->
+    <section class="spanel hidden" data-panel="prefs">
+      <div class="box">
+        <h4>Playback</h4>
+        <label for="prefAudio">Preferred audio</label>
+        <select id="prefAudio"><option value="sub">Subtitled (Sub)</option><option value="dub">Dubbed (Dub)</option></select>
+        <small>Used whenever you open a title. You can still switch Sub/Dub on the watch page for the current session.</small>
+        <label for="prefOpen">When opening a title</label>
+        <select id="prefOpen"><option value="manual">Wait for me to pick an episode</option><option value="resume">Resume where I left off</option><option value="first">Start at episode 1</option></select>
+        <small>Starting an episode automatically also marks it watched and syncs it to AniList if you're connected.</small>
+      </div>
+      <div class="box">
+        <h4>Display</h4>
+        <label for="prefTitle">Title language</label>
+        <select id="prefTitle"><option value="english">English</option><option value="romaji">Japanese (romaji)</option><option value="native">Japanese (native script)</option></select>
+        <small>You can also switch quickly with the EN / JP toggle in the top bar.</small>
+        <label class="chk"><input type="checkbox" id="prefAdWarn"> Show the ad-blocker reminder when no blocker is detected</label>
+      </div>
+    </section>
+
     <!-- Library Rules -->
     <section class="spanel hidden" data-panel="library">
       <div class="box">
         <h4>Season grouping</h4>
         <label class="chk"><input type="checkbox" id="groupToggle"> Group seasons of the same show into one card (Already Watched). Movies, OVAs and specials always stay separate.</label>
+      </div>
+      <div class="box">
+        <h4>Local data</h4>
+        <small>Clear things this browser remembers. These buttons never change anything on AniList.</small>
+        <div class="row" style="margin:0">
+          <button class="btn" id="clearHist">Clear Continue Watching</button>
+          <button class="btn" id="clearWatched">Clear watched marks</button>
+        </div>
       </div>
     </section>
 
@@ -588,7 +638,8 @@ const store = {
   set(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
 };
 const uid = () => Math.random().toString(36).slice(2, 10);
-const titleOf = a => a.title.english || a.title.romaji;
+let titleLang = store.get('anifin.titleLang', 'english');      // 'english' | 'romaji' | 'native'
+const titleOf = a => { const t = a.title || {}; return (titleLang === 'english' ? (t.english || t.romaji) : titleLang === 'native' ? (t.native || t.romaji) : (t.romaji || t.english)) || ''; };
 // Cut very long titles off with an ellipsis (the full title stays in the tooltip)
 const clip = (s, n) => s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s;
 const shortTitle = (a, n = 46) => clip(titleOf(a), n);
@@ -599,9 +650,9 @@ function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.
 
 /* ============ AniList GraphQL (id + idMal + relations) ============ */
 const API = 'https://graphql.anilist.co';
-const F = `id idMal title { romaji english } coverImage { large extraLarge } bannerImage description(asHtml:false)
+const F = `id idMal title { romaji english native } coverImage { large extraLarge } bannerImage description(asHtml:false)
   episodes nextAiringEpisode { episode } seasonYear format averageScore genres
-  relations { edges { relationType node { id idMal title { english romaji } format seasonYear } } }`;
+  relations { edges { relationType node { id idMal title { english romaji native } format seasonYear } } }`;
 const M = args => `media(type: ANIME, isAdult: false, ${args}) { ${F} }`;
 
 async function gql(query, variables = {}, token = '') {
@@ -676,7 +727,7 @@ const getProvider = () => allProviders().find(p => p.id === providerId);
 const saveProviders = () => { store.set('anifin.providers', providers); store.set('anifin.provider', providerId); };
 
 /* ============ State ============ */
-const state = { anime: null, chain: [], ep: null, count: 0, tab: 0, epFilter: 'all', lang: 'sub', mode: 'embed' };
+const state = { anime: null, chain: [], ep: null, count: 0, tab: 0, epFilter: 'all', lang: store.get('anifin.pref.audio', 'sub'), mode: 'embed' };
 const BATCH = 100;               // episodes per pagination tab
 let routeToken = 0;
 
@@ -686,7 +737,7 @@ const seasonLabel = () => state.chain.length > 1 ? titleOf(state.anime) : '';
 function saveProgress() {
   if (!state.anime || !state.ep) return;
   const a = state.anime, root = state.chain[0] || a;
-  const entry = { animeId: a.id, title: titleOf(root), poster: a.coverImage.large, episode: state.ep, seasonTitle: seasonLabel(), year: a.seasonYear || null, timestamp: Date.now(), provider: providerId };
+  const entry = { animeId: a.id, title: titleOf(root), names: root.title, seasonNames: state.chain.length > 1 ? a.title : null, poster: a.coverImage.large, episode: state.ep, seasonTitle: seasonLabel(), year: a.seasonYear || null, timestamp: Date.now(), provider: providerId };
   store.set('anifin.history', [entry, ...getHistory().filter(h => h.animeId !== a.id)].slice(0, 30));
 }
 function resume(h) {
@@ -703,7 +754,7 @@ function makeCard(a, onClick, extra) {
   // Meta line under the (shortened) title: custom text if given, otherwise release year • format
   const meta = extra || [a.seasonYear, a.format && a.format.replace('_', ' ')].filter(Boolean).join(' • ');
   if (meta) c.appendChild(el('small', extra ? '' : 'meta', meta));
-  c.onclick = onClick;
+  c.onclick = onClick; c._a = a;
   return c;
 }
 const goWatch = (id, ep) => { location.hash = `#watch/${id}` + (ep ? '/' + ep : ''); };
@@ -724,7 +775,8 @@ function renderContinue() {
   if (!hist.length) return;
   box.appendChild(buildRow('Continue Watching', hist.map(h => {
     const extra = histExtra(h);
-    const c = makeCard({ title: { romaji: h.title }, coverImage: { large: h.poster } }, () => resume(h), extra);
+    const c = makeCard(histMedia(h), () => resume(h), extra);
+    c._extra = () => histExtra(h);
     const rm = el('button', 'rm', '×'); rm.title = 'Remove';
     rm.onclick = e => { e.stopPropagation(); store.set('anifin.history', getHistory().filter(x => x.animeId !== h.animeId)); renderContinue(); };
     c.appendChild(rm); return c;
@@ -837,7 +889,14 @@ async function loadWatch(id, startEp) {
     catch (e) { /* relations are optional – keep single entry */ }
   } else renderSeasons();
 
-  if (startEp) selectEpisode(startEp); else playEmbed();
+  if (startEp) selectEpisode(startEp);
+  else {
+    const mode = store.get('anifin.pref.open', 'manual');                 // preference: what happens when a title opens
+    if (mode !== 'manual' && state.count) {
+      const h = getHistory().find(x => x.animeId === id);
+      selectEpisode(mode === 'resume' && h ? Math.min(h.episode, state.count) : 1);
+    } else playEmbed();
+  }
 }
 
 function renderWatchHero(a) {
@@ -1271,7 +1330,7 @@ function showMyList() {
   $('searchStatus').textContent = hist.length ? '' : 'Nothing here yet. Episodes you watch are saved automatically.';
   hist.forEach(h => {
     const extra = histExtra(h);
-    $('searchGrid').appendChild(makeCard({ title: { romaji: h.title }, coverImage: { large: h.poster } }, () => resume(h), extra));
+    { const c = makeCard(histMedia(h), () => resume(h), extra); c._extra = () => histExtra(h); $('searchGrid').appendChild(c); }
   });
   // "Already Watched" section: your completed list from AniList
   if (alToken() && al.id) {
@@ -1320,7 +1379,11 @@ document.querySelectorAll('[data-genre]').forEach(b => b.onclick = () => openLis
 document.querySelectorAll('[data-tag]').forEach(b => b.onclick = () => openList(b.dataset.tag, `tag: ${JSON.stringify(b.dataset.tag)}, ${POP}`));   // Isekai is an AniList tag, not a genre
 /* ============ Watched episodes (site history + AniList progress) ============ */
 const alEntries = new Map();     // AniList list entries: mediaId -> { progress, status }
-const histExtra = h => [h.seasonTitle && h.seasonTitle !== h.title ? clip(h.seasonTitle, 24) : '', 'Episode ' + h.episode, h.year || ''].filter(Boolean).join(' • ');
+const histMedia = h => ({ title: h.names || { romaji: h.title }, coverImage: { large: h.poster } });
+const histExtra = h => {
+  const root = titleOf(histMedia(h)), season = h.seasonNames ? titleOf({ title: h.seasonNames }) : h.seasonTitle;
+  return [season && season !== root ? clip(season, 24) : '', 'Episode ' + h.episode, h.year || ''].filter(Boolean).join(' • ');
+};
 function markWatched(id, ep) {
   const all = store.get('anifin.watched', {}), arr = all[id] || [];
   if (!arr.includes(ep)) { arr.push(ep); all[id] = arr; store.set('anifin.watched', all); }
@@ -1408,7 +1471,7 @@ async function loadRecs(a) {
   let recs = recCache.get(a.id);
   if (!recs) {
     try {
-      const d = await gql(`query($id:Int){ Media(id:$id){ recommendations(perPage:12, sort:RATING_DESC){ nodes{ mediaRecommendation{ id isAdult title{romaji english} coverImage{large} format seasonYear averageScore genres } } } } }`, { id: a.id });
+      const d = await gql(`query($id:Int){ Media(id:$id){ recommendations(perPage:12, sort:RATING_DESC){ nodes{ mediaRecommendation{ id isAdult title{romaji english native} coverImage{large} format seasonYear averageScore genres } } } } }`, { id: a.id });
       recs = d.Media.recommendations.nodes.map(n => n.mediaRecommendation).filter(m => m && !m.isAdult);
       recCache.set(a.id, recs);
     } catch (e) { return; }
@@ -1422,7 +1485,7 @@ async function loadRecs(a) {
     if (m.seasonYear) badges.appendChild(el('span', 'rb', m.seasonYear));
     (m.genres || []).slice(0, 3).forEach(g => genres.appendChild(el('span', 'rb gen', g)));
     t.append(b, badges); if (genres.children.length) t.appendChild(genres);
-    row.append(img, t); row.onclick = () => goWatch(m.id); list.appendChild(row);
+    row.append(img, t); row._a = m; row.onclick = () => goWatch(m.id); list.appendChild(row);
   });
   box.classList.remove('hidden'); side.classList.remove('norecs');
 }
@@ -1515,7 +1578,7 @@ async function loadSchedule() {
     for (let p = 1; p <= 6; p++) {
       const d = await gql(`query($p:Int,$from:Int,$to:Int){ Page(page:$p, perPage:50){ pageInfo{ hasNextPage }
         airingSchedules(airingAt_greater:$from, airingAt_lesser:$to, sort:TIME){ airingAt episode
-          media{ id isAdult title{romaji english} coverImage{large} format seasonYear averageScore } } } }`, { p, from, to });
+          media{ id isAdult title{romaji english native} coverImage{large} format seasonYear averageScore } } } }`, { p, from, to });
       if (stale()) return;
       items.push(...d.Page.airingSchedules);
       if (!d.Page.pageInfo.hasNextPage) break;
@@ -1530,7 +1593,7 @@ async function loadSchedule() {
     const t = el('div', 't'), b = el('b', '', shortTitle(m, 56)); b.title = titleOf(m); t.appendChild(b);
     t.appendChild(el('small', '', [m.format && m.format.replace('_', ' '), m.seasonYear, score(m) && '★ ' + score(m)].filter(Boolean).join(' • ')));
     row.append(t, el('span', 'ep', 'Ep ' + x.episode));
-    row.onclick = () => goWatch(m.id);
+    row._a = m; row.onclick = () => goWatch(m.id);
     list.appendChild(row);
   });
 }
@@ -1556,6 +1619,7 @@ function hideAdBanner(snooze) {
 }
 $('adGotIt').onclick = $('adClose').onclick = () => hideAdBanner(true);
 function checkAdBlock() {
+  if (store.get('anifin.pref.adwarn', true) === false) return;           // turned off in Preferences
   if (+localStorage.getItem(AD_DISMISS_KEY) > Date.now()) return;          // dismissed recently
   setTimeout(() => {                                                       // filters apply a moment after load
     if (adBlockActive()) return;
@@ -1563,12 +1627,50 @@ function checkAdBlock() {
   }, 1500);
 }
 
+/* ============ Title language (EN / JP) ============ */
+function syncTitleToggle() {
+  document.querySelectorAll('#titleLang .btn').forEach(b => b.classList.toggle('active', (b.dataset.v === 'english') === (titleLang === 'english')));
+  $('prefTitle').value = titleLang; refreshSelect($('prefTitle'));
+}
+// Re-label everything already on screen (cards, hero, watch page, recommendations, schedule)
+function retitle() {
+  document.querySelectorAll('.card').forEach(c => {
+    if (!c._a) return;
+    const p = c.querySelector('p'); p.textContent = shortTitle(c._a); p.title = titleOf(c._a);
+    if (c._extra) { const sm = c.querySelector('small'); if (sm) sm.textContent = c._extra(); }
+  });
+  document.querySelectorAll('.rec, .srow').forEach(r => {
+    if (!r._a) return;
+    const b = r.querySelector('b'); b.textContent = shortTitle(r._a, r.classList.contains('rec') ? 64 : 56); b.title = titleOf(r._a);
+  });
+  if (heroItems.length) showHero(heroIdx);
+  if (state.anime) { renderWatchHero(state.anime); renderSeasons(); document.title = titleOf(state.anime) + ' – Zaku'; }
+}
+function setTitleLang(v) { titleLang = v; store.set('anifin.titleLang', v); syncTitleToggle(); retitle(); }
+document.querySelectorAll('#titleLang .btn').forEach(b => b.onclick = () => setTitleLang(b.dataset.v === 'romaji' && titleLang === 'native' ? 'native' : b.dataset.v));
+$('prefTitle').onchange = e => setTitleLang(e.target.value);
+
+/* ============ Preferences ============ */
+const pref = { get: (k, d) => store.get('anifin.pref.' + k, d), set: (k, v) => store.set('anifin.pref.' + k, v) };
+$('prefAudio').onchange = e => { pref.set('audio', e.target.value); setLang(e.target.value); };
+$('prefOpen').onchange = e => pref.set('open', e.target.value);
+$('prefAdWarn').onchange = e => { pref.set('adwarn', e.target.checked); if (!e.target.checked) hideAdBanner(false); };
+$('clearHist').onclick = () => { if (!confirm('Clear your Continue Watching list?')) return; store.set('anifin.history', []); renderContinue(); toast('Continue Watching cleared'); };
+$('clearWatched').onclick = () => {
+  if (!confirm('Forget which episodes you have watched on this site? (AniList progress is not affected.)')) return;
+  store.set('anifin.watched', {}); if (state.anime) { renderEpisodes(); renderSeasons(); } toast('Watched marks cleared');
+};
+
+/* ============ Random anime (header icon) ============ */
+$('randBtn').onclick = async () => { const b = $('randBtn'); b.disabled = true; b.classList.add('spin'); try { await randomPick(); } finally { b.disabled = false; b.classList.remove('spin'); } };
+
 /* ============ Init ============ */
 fillStatus($('alStatusSel')); fillStatus($('alDefaultStatus')); $('alDefaultStatus').value = defaultAlStatus();
 ['provSelect', 'fFormat', 'fGenre', 'fStatus', 'fSort'].forEach(id => enhanceSelect($(id)));
 enhanceSelect($('alStatusSel'), { block: true }); enhanceSelect($('alDefaultStatus'), { block: true });
 enhanceSelect($('pType'), { block: true });
 enhanceSelect($('seasonSelect'), { block: true });
+['prefAudio', 'prefOpen', 'prefTitle'].forEach(id => enhanceSelect($(id), { block: true }));
 renderProvSelect();
 loadSiteProviders();
 renderAl();
@@ -1584,6 +1686,12 @@ if (alToken()) {   // silently re-check a saved token so the badge reflects real
 }
 $('groupToggle').checked = store.get('anifin.group', true);
 $('groupToggle').onchange = e => { store.set('anifin.group', e.target.checked); loadWatchedRow(); };
+// apply saved preferences to the UI
+$('prefAudio').value = state.lang; refreshSelect($('prefAudio'));
+$('prefOpen').value = pref.get('open', 'manual'); refreshSelect($('prefOpen'));
+$('prefAdWarn').checked = pref.get('adwarn', true) !== false;
+$('subBtn').classList.toggle('active', state.lang === 'sub'); $('dubBtn').classList.toggle('active', state.lang === 'dub');
+syncTitleToggle();
 checkAdBlock();
 loadHome();
 route();      // honour a deep link like #watch/159042 on first load

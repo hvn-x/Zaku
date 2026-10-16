@@ -1367,6 +1367,12 @@ function syncAniList(a, ep) {
   }, 800);
 }
 
+// ============ ADBLOCK (Hopefully) ======================
+  const frame = document.getElementById('anime-player');
+setTimeout(() => {
+  frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms');
+}, 3500);
+
 /* ============ List pages (footer links, genres, browse, A-Z) ============ */
 const TAGS = ['Isekai', 'Reincarnation', 'School', 'Magic', 'Super Power', 'Military', 'Time Manipulation', 'Post-Apocalyptic', 'Cyberpunk', 'Vampire', 'Samurai', 'Martial Arts', 'Video Games', 'Cooking', 'Iyashikei', 'Survival'];   // AniList tags (Isekai is a tag, not a genre)
 const GENRES = ['Action', 'Adventure', 'Comedy', 'Drama', 'Ecchi', 'Fantasy', 'Horror', 'Mahou Shoujo', 'Mecha', 'Music', 'Mystery', 'Psychological', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports', 'Supernatural', 'Thriller'];

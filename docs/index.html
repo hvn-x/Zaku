@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Anime-X</title>
+<title>Zaku</title>
 <link rel="icon" type="image/x-icon" href="Zaku.ico">
 <link rel="icon" type="image/svg+xml" href="Zaku.svg">
 <style>
@@ -45,19 +45,10 @@
   .iconbtn { padding:9px 11px; }
 
   /* ============ Hero (home) & backdrop (watch) ============ */
-  .hero, .wv-hero { position:relative; display:flex; align-items:flex-end; overflow:hidden; }
-  .hero { min-height:min(72vh,680px); padding:120px var(--gutter) 64px; }
+  .wv-hero { position:relative; display:flex; align-items:flex-end; overflow:hidden; }
   .hero-bg { position:absolute; inset:0; background-size:cover; background-position:center 25%; }
-  .hero::before, .wv-hero::before { content:""; position:absolute; inset:0; z-index:1;
+  .wv-hero::before { content:""; position:absolute; inset:0; z-index:1;
     background:linear-gradient(90deg,rgba(15,15,18,.96) 0%,rgba(15,15,18,.6) 42%,rgba(15,15,18,.1) 80%), linear-gradient(0deg,var(--bg) 0%,transparent 45%); }
-  .hero-body { position:relative; z-index:2; max-width:620px; padding-left:16px; }
-  .hero-body::before { content:""; position:absolute; left:0; top:4px; bottom:4px; width:4px; border-radius:2px; background:var(--bar); }
-  .hero h1 { font-size:clamp(1.8rem,4vw,3.2rem); line-height:1.08; margin:10px 0; letter-spacing:-.5px; }
-  .hero p { color:#ddd6d0; line-height:1.6; margin:0 0 20px; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
-  .hero-actions .btn { padding:12px 24px; font-size:1rem; }
-  .dots { position:absolute; z-index:2; right:var(--gutter); bottom:28px; display:flex; gap:8px; }
-  .dots i { width:26px; height:4px; border-radius:2px; background:rgba(255,255,255,.25); cursor:pointer; transition:background .2s; }
-  .dots i.on { background:var(--accent); }
   .tags { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
   .tag { padding:4px 11px; border-radius:999px; font-size:.78rem; background:var(--glass-hi); border:1px solid var(--glass-border); }
   .tag.score { background:var(--accent); color:#1a1208; font-weight:800; border:none; }
@@ -365,11 +356,9 @@
   button.primary { background:linear-gradient(135deg,#c4262e,#8a1a1a); border-color:var(--gold); }
   button.primary:hover { background:linear-gradient(135deg,#ff4b4b,#a82323); border-color:var(--gold); box-shadow:0 6px 20px rgba(255,75,75,.35); }
   input:focus, select:focus, .fgrid input:focus { outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(249,212,35,.16); }
-  .hero-actions .btn { padding:13px 28px; border-radius:12px; font-size:1.02rem; }
   .row-head .btn { width:34px; height:34px; padding:0; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:1.15rem; line-height:1; }
   .row-head .btn:hover { border-color:var(--gold); background:rgba(249,212,35,.14); transform:none; }
   .tag.score { background:var(--gold); }
-  .dots i.on { background:var(--gold); }
   .tabs { gap:8px; }
   .tabs button { border-radius:999px; padding:7px 15px; }
   .tabs button:hover { border-color:var(--crimson); background:rgba(255,75,75,.2); transform:none; }
@@ -394,9 +383,6 @@
   /* ============ Frosted-glass gradient on more surfaces ============ */
   /* blur only on small / static surfaces; scrolling panels (sidebar, dialog) get the gradient without backdrop blur so they stay smooth */
   header { background:var(--glass-grad), linear-gradient(rgba(15,15,18,.88),rgba(15,15,18,.4)); }
-  .hero-body { padding:26px 30px 26px 34px; border-radius:20px; background:var(--glass-grad), rgba(15,15,18,.42); border:1px solid var(--glass-border);
-    backdrop-filter:blur(16px) saturate(140%); -webkit-backdrop-filter:blur(16px) saturate(140%); }
-  .hero-body::before { left:14px; top:28px; bottom:28px; }
   .wv-info { padding:18px 22px; border-radius:20px; background:var(--glass-grad), rgba(15,15,18,.45); border:1px solid var(--glass-border);
     backdrop-filter:blur(16px) saturate(140%); -webkit-backdrop-filter:blur(16px) saturate(140%); }
   .side { background:var(--glass-grad), #15151a; }
@@ -467,9 +453,8 @@
   .card .ct.yr { color:var(--gold); background:rgba(249,212,35,.12); }
   .card .ct.fmt { color:var(--crimson); background:rgba(255,75,75,.14); }
   .card .ct.air { color:#7ee2a0; background:rgba(126,226,160,.12); }
-  .card .ct.air i { width:7px; height:7px; border-radius:50%; background:#7ee2a0; animation:pulse 1.8s infinite; }
-  @keyframes pulse { 0% { box-shadow:0 0 0 0 rgba(126,226,160,.6); } 70%,100% { box-shadow:0 0 0 6px rgba(126,226,160,0); } }
-  @container (max-width:175px) { .card .ct.air b { display:none; } .card .ct { padding:0 6px; } }      /* narrow cards: airing shows as just the pulsing dot */
+  .card .ct.air .short { display:none; }
+  @container (max-width:175px) { .card .ct.air .full { display:none; } .card .ct.air .short { display:inline; } .card .ct { padding:0 6px; } }      /* narrow cards: "Airing" shortens to "Air" */
   .card .trail small { display:block; flex:1; min-width:0; padding:0; font-size:.74rem; font-weight:700; color:var(--gold); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .card .pbar { position:absolute; z-index:3; left:0; right:0; bottom:0; height:4px; background:rgba(255,255,255,.14); }
   .card .pbar i { display:block; height:100%; background:linear-gradient(90deg,var(--crimson),var(--gold)); }
@@ -479,11 +464,62 @@
   .card.stacked { box-shadow:5px 5px 0 -1px rgba(255,255,255,.07), 10px 10px 0 -2px rgba(255,255,255,.04); }
   .card.stacked:hover { box-shadow:5px 5px 0 -1px rgba(255,255,255,.07), 10px 10px 0 -2px rgba(255,255,255,.04), 0 16px 38px rgba(255,75,75,.28); }
 
-  @media (max-width:1000px) { header { flex-wrap:wrap; row-gap:4px; } .nav { order:5; flex:0 0 100%; } .searchpage { padding-top:132px; } .wv-hero { padding-top:140px; } .hero { padding-top:150px; } }
+  /* ============ Home hero: cinematic banner + spotlight rail ============ */
+  .hx { position:relative; min-height:min(80vh,740px); display:flex; align-items:flex-end; overflow:hidden; }
+  .hbg { position:absolute; inset:0; background-size:cover; background-position:center 22%; opacity:0; transform:scale(1.08); transition:opacity .9s ease; }
+  .hbg.on { opacity:1; animation:heroZoom 16s ease-out forwards; }
+  @keyframes heroZoom { from { transform:scale(1.08); } to { transform:scale(1); } }
+  .hx-shade { position:absolute; inset:0; z-index:1; pointer-events:none;
+    background:linear-gradient(90deg,rgba(15,15,18,.97) 0%,rgba(15,15,18,.8) 32%,rgba(15,15,18,.22) 66%,rgba(15,15,18,.5) 100%),
+               linear-gradient(0deg,var(--bg) 0%,rgba(15,15,18,0) 40%),
+               radial-gradient(60% 55% at 88% 12%,rgba(255,75,75,.18),transparent 70%); }
+  .hx-inner { position:relative; z-index:2; width:100%; display:grid; grid-template-columns:minmax(0,1fr) clamp(280px,24vw,360px); gap:48px; align-items:end; padding:130px var(--gutter) 70px; }
+  .hx-body { max-width:700px; min-width:0; }
+  .hx-body.swap > * { animation:heroIn .65s cubic-bezier(.2,.7,.2,1) both; }
+  .hx-body.swap > *:nth-child(2) { animation-delay:.05s; } .hx-body.swap > *:nth-child(3) { animation-delay:.1s; }
+  .hx-body.swap > *:nth-child(4) { animation-delay:.15s; } .hx-body.swap > *:nth-child(5) { animation-delay:.2s; }
+  @keyframes heroIn { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+  .hx-eyebrow { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:16px; }
+  .hx-rank { padding:5px 13px; border-radius:6px; font-size:.72rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:#1a1500; background:var(--gold); box-shadow:0 0 18px rgba(249,212,35,.35); }
+  .hx h1 { margin:0 0 14px; font-size:clamp(2.1rem,4.8vw,4rem); line-height:1.04; letter-spacing:-.02em; font-weight:800; text-shadow:0 4px 32px rgba(0,0,0,.65);
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .hx-meta { display:flex; flex-wrap:wrap; align-items:center; gap:6px 0; margin-bottom:16px; font-size:.92rem; font-weight:600; color:#e8e1db; }
+  .hx-meta .hm + .hm::before { content:"•"; margin:0 12px; color:var(--muted); font-weight:400; }
+  .hx-meta .hm.score { color:var(--gold); font-weight:800; }
+  .hx-meta .hm.gn { color:#cfc8c2; font-weight:500; }
+  .hx p { max-width:60ch; margin:0 0 26px; color:#d8d1cb; line-height:1.7; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+  .hx-actions { display:flex; flex-wrap:wrap; gap:12px; }
+  .hx-actions .btn { height:48px; padding:0 28px; border-radius:12px; font-size:1rem; }
+  .hx-actions .btn:not(.primary) { background:rgba(255,255,255,.08); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
+  .hx-rail { display:flex; flex-direction:column; gap:10px; }
+  .spot { position:relative; display:flex; align-items:center; gap:12px; width:100%; padding:8px 14px 8px 12px; border-radius:14px; text-align:left; cursor:pointer; overflow:hidden; font:inherit; color:var(--text);
+    background:var(--glass-grad), rgba(15,15,18,.58); border:1px solid var(--glass-border); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); transition:border-color .2s, box-shadow .2s, transform .2s; }
+  .spot:hover { border-color:var(--crimson); transform:translateX(-3px); }
+  .spot .rk { flex:none; width:22px; font-size:.72rem; font-weight:800; letter-spacing:.08em; color:var(--muted); }
+  .spot img { flex:none; width:44px; height:62px; object-fit:cover; border-radius:8px; background:#111; }
+  .spot .tt { min-width:0; display:flex; flex-direction:column; gap:3px; }
+  .spot .tt b { font-size:.86rem; font-weight:700; line-height:1.25; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .spot .tt small { font-size:.72rem; color:var(--muted); }
+  .spot.on { border-color:var(--gold); background:linear-gradient(135deg,rgba(255,75,75,.24),rgba(249,212,35,.08)), rgba(15,15,18,.7); box-shadow:0 0 24px rgba(249,212,35,.18); }
+  .spot.on .rk { color:var(--gold); }
+  .spot .bar { position:absolute; left:0; bottom:0; height:3px; width:0; background:linear-gradient(90deg,var(--crimson),var(--gold)); }
+  .spot.on .bar { animation:spotFill var(--hero-ms,9000ms) linear forwards; }
+  @keyframes spotFill { to { width:100%; } }
+  .hx-dots { display:none; }
+  @media (max-width:900px) {
+    .hx-inner { grid-template-columns:1fr; padding:120px var(--gutter) 64px; }
+    .hx-rail { display:none; }
+    .hx-dots { position:absolute; z-index:3; right:var(--gutter); bottom:26px; display:flex; gap:8px; }
+    .hx-dots i { width:26px; height:4px; border-radius:2px; background:rgba(255,255,255,.28); cursor:pointer; }
+    .hx-dots i.on { background:var(--gold); }
+    .hx { min-height:68vh; }
+  }
+
+  @media (max-width:1000px) { header { flex-wrap:wrap; row-gap:4px; } .nav { order:5; flex:0 0 100%; } .searchpage { padding-top:132px; } .wv-hero { padding-top:140px; } .hx-inner { padding-top:160px; } }
   @media (max-width:900px) { .foot-grid { grid-template-columns:repeat(2,1fr); } .foot-brand, .foot-col.genres { grid-column:1/-1; } }
   @media (max-width:520px) { .foot-grid { grid-template-columns:1fr; } #alBadge { display:none; } }
 
-  @media (max-width:600px) { .wv-info { flex-direction:column; align-items:flex-start; } .hero { min-height:60vh; } .toolbar select { min-width:0; flex:1; } }
+  @media (max-width:600px) { .wv-info { flex-direction:column; align-items:flex-start; } .toolbar select { min-width:0; flex:1; } }
 </style>
 </head>
 <body>
@@ -517,15 +553,24 @@
   <!-- ========== HOME VIEW ========== -->
   <div id="homeView">
     <div id="home">
-      <section class="hero" id="hero">
-        <div class="hero-bg" id="heroBg"></div>
-        <div class="hero-body">
-          <div class="tags" id="heroTags"></div>
-          <h1 id="heroTitle">Loading…</h1>
-          <p id="heroDesc"></p>
-          <div class="hero-actions"><button class="btn primary" id="heroWatch">&#9654; Watch Now</button></div>
+      <section class="hx" id="hero">
+        <div class="hbg on" id="heroBg"></div>
+        <div class="hbg" id="heroBg2"></div>
+        <div class="hx-shade"></div>
+        <div class="hx-inner">
+          <div class="hx-body" id="heroBody">
+            <div class="hx-eyebrow" id="heroEye"></div>
+            <h1 id="heroTitle">Loading…</h1>
+            <div class="hx-meta" id="heroTags"></div>
+            <p id="heroDesc"></p>
+            <div class="hx-actions">
+              <button class="btn primary" id="heroWatch">&#9654; Watch Now</button>
+              <button class="btn" id="heroInfo">Details</button>
+            </div>
+          </div>
+          <aside class="hx-rail" id="heroRail" aria-label="Trending now"></aside>
         </div>
-        <div class="dots" id="dots"></div>
+        <div class="hx-dots" id="dots"></div>
       </section>
       <div class="rows" id="rows"></div>
     </div>
@@ -808,7 +853,11 @@ let titleLang = store.get('anifin.titleLang', 'english');      // 'english' | 'r
 const titleOf = a => { const t = a.title || {}; return (titleLang === 'english' ? (t.english || t.romaji) : titleLang === 'native' ? (t.native || t.romaji) : (t.romaji || t.english)) || ''; };
 // Cut very long titles off with an ellipsis (the full title stays in the tooltip)
 const clip = (s, n) => s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s;
-const shortTitle = (a, n = 46) => clip(titleOf(a), n);
+const shortTitle = (a, n = 32) => {           // cuts earlier than before, on a word boundary where possible
+  const t = titleOf(a); if (t.length <= n) return t;
+  const cut = t.slice(0, n - 1), sp = cut.lastIndexOf(' ');
+  return (sp > n * 0.55 ? cut.slice(0, sp) : cut).trimEnd().replace(/[,:;–-]+$/, '') + '…';
+};
 const stripHtml = s => (s || 'No description.').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 const score = a => a.averageScore ? (a.averageScore / 10).toFixed(1) : null;
 // Episodes that are actually out: for a show that is still airing, everything before the next scheduled episode
@@ -952,7 +1001,7 @@ function makeCard(a, onClick, extra, frac) {
   else {
     if (a.seasonYear) trail.appendChild(el('span', 'ct yr', a.seasonYear));
     if (a.format) trail.appendChild(el('span', 'ct fmt', a.format.replace('_', ' ')));
-    if (a.status === 'RELEASING') { const air = el('span', 'ct air'); air.append(el('i'), el('b', '', 'Airing')); trail.appendChild(air); }
+    if (a.status === 'RELEASING') { const air = el('span', 'ct air'); air.append(el('b', 'full', 'Airing'), el('b', 'short', 'Air')); trail.appendChild(air); }
   }
   c.appendChild(trail);
   c.onclick = onClick; c._a = a;
@@ -984,27 +1033,52 @@ function renderContinue() {
   })));
 }
 
-let heroItems = [], heroIdx = 0, heroTimer;
+let heroItems = [], heroIdx = 0, heroTimer, heroLayer = 0, heroUrl = '';
+const HERO_MS = 9000;
+function setHeroBg(url) {                                       // crossfade between two background layers
+  if (url === heroUrl) return; heroUrl = url;
+  const layers = [$('heroBg'), $('heroBg2')], next = layers[1 - heroLayer];
+  next.style.backgroundImage = `url("${url}")`;
+  layers[heroLayer].classList.remove('on'); next.classList.add('on'); heroLayer = 1 - heroLayer;
+}
 function showHero(i) {
   heroIdx = i; const a = heroItems[i]; if (!a) return;
-  $('heroBg').style.backgroundImage = `url("${a.bannerImage || a.coverImage.extraLarge || a.coverImage.large}")`;
-  $('heroTitle').textContent = clip(titleOf(a), 70); $('heroDesc').textContent = stripHtml(a.description);
-  const t = $('heroTags'); t.innerHTML = '';
-  if (score(a)) t.appendChild(el('span', 'tag score', '★ ' + score(a)));
-  t.appendChild(el('span', 'tag hot', 'Trending #' + (i + 1)));
-  if (a.format) t.appendChild(el('span', 'tag', a.format));
-  if (a.seasonYear) t.appendChild(el('span', 'tag', a.seasonYear));
+  setHeroBg(a.bannerImage || a.coverImage.extraLarge || a.coverImage.large);
+  const body = $('heroBody'); body.classList.remove('swap'); void body.offsetWidth; body.classList.add('swap');   // replay the text entrance
+  $('heroTitle').textContent = clip(titleOf(a), 70); $('heroTitle').title = titleOf(a);
+  $('heroDesc').textContent = stripHtml(a.description);
+  const eye = $('heroEye'); eye.innerHTML = '';
+  eye.appendChild(el('span', 'hx-rank', '#' + (i + 1) + ' Trending'));
+  if (a.status) eye.appendChild(el('span', 'tag ' + STATUS_CLS[a.status], STATUS_LABEL[a.status]));
+  const m = $('heroTags'); m.innerHTML = '';
+  const add = (t, c) => m.appendChild(el('span', 'hm' + (c ? ' ' + c : ''), t));
+  if (score(a)) add('★ ' + score(a), 'score');
+  if (a.seasonYear) add(a.seasonYear);
+  if (a.format) add(a.format.replace('_', ' '));
+  const n = episodeCount(a); if (a.episodes || n) add(a.status === 'RELEASING' && a.episodes ? `${n}/${a.episodes} eps` : `${a.episodes || n} eps`);
+  (a.genres || []).slice(0, 3).forEach(g => add(g, 'gn'));
+  const rail = [...$('heroRail').children]; rail.forEach(b => b.classList.remove('on')); void $('heroRail').offsetWidth; if (rail[i]) rail[i].classList.add('on');
   [...$('dots').children].forEach((d, j) => d.classList.toggle('on', j === i));
 }
 function setupHero(list) {
   heroItems = list.filter(a => a.bannerImage).slice(0, 5);
   if (!heroItems.length) heroItems = list.slice(0, 5);
-  $('dots').innerHTML = '';
-  heroItems.forEach((_, i) => { const d = el('i'); d.onclick = () => { showHero(i); restartHero(); }; $('dots').appendChild(d); });
+  const rail = $('heroRail'); rail.innerHTML = ''; $('dots').innerHTML = '';
+  $('hero').style.setProperty('--hero-ms', HERO_MS + 'ms');
+  heroItems.forEach((a, i) => {
+    const b = el('button', 'spot'), img = el('img'), tt = el('span', 'tt'), nm = el('b', '', shortTitle(a, 34));
+    b.type = 'button'; img.alt = ''; img.src = a.coverImage.large; nm.title = titleOf(a); b._a = a;
+    tt.append(nm, el('small', '', [a.seasonYear, a.format && a.format.replace('_', ' ')].filter(Boolean).join(' • ')));
+    b.append(el('span', 'rk', String(i + 1).padStart(2, '0')), img, tt, el('i', 'bar'));
+    b.onclick = () => { showHero(i); restartHero(); };
+    rail.appendChild(b);
+    const d = el('i'); d.onclick = () => { showHero(i); restartHero(); }; $('dots').appendChild(d);
+  });
   showHero(0); restartHero();
 }
-function restartHero() { clearInterval(heroTimer); heroTimer = setInterval(() => { if (!$('homeView').classList.contains('hidden') && heroItems.length) showHero((heroIdx + 1) % heroItems.length); }, 9000); }
+function restartHero() { clearInterval(heroTimer); heroTimer = setInterval(() => { if (!$('homeView').classList.contains('hidden') && heroItems.length) showHero((heroIdx + 1) % heroItems.length); }, HERO_MS); }
 $('heroWatch').onclick = () => heroItems[heroIdx] && goWatch(heroItems[heroIdx].id, 1);
+$('heroInfo').onclick = () => heroItems[heroIdx] && goWatch(heroItems[heroIdx].id);
 
 async function loadHome() {
   const rows = $('rows'); rows.innerHTML = '';
@@ -2053,7 +2127,8 @@ function retitle() {
     if (!r._a) return;
     const b = r.querySelector('b'); b.textContent = shortTitle(r._a, r.classList.contains('rec') ? 64 : 56); b.title = titleOf(r._a);
   });
-  if (heroItems.length) showHero(heroIdx);
+  document.querySelectorAll('.spot').forEach(b => { if (b._a) { const nm = b.querySelector('b'); nm.textContent = shortTitle(b._a, 34); nm.title = titleOf(b._a); } });
+  if (heroItems.length) { showHero(heroIdx); restartHero(); }
   if (state.anime) { renderWatchHero(state.anime); renderSeasons(); renderEpisodes(); updateNav(); document.title = titleOf(state.anime) + ' – Zaku'; }
 }
 function setTitleLang(v) { titleLang = v; store.set('anifin.titleLang', v); syncTitleToggle(); retitle(); }

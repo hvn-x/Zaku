@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Zaku</title>
+<title>Anime-X</title>
 <link rel="icon" type="image/x-icon" href="Zaku.ico">
 <link rel="icon" type="image/svg+xml" href="Zaku.svg">
 <style>
@@ -429,18 +429,23 @@
   /* ============ Ad-free mode ============ */
   .adbadge { display:inline-flex; align-items:center; gap:6px; height:28px; padding:0 11px; border-radius:999px; font-size:.74rem; font-weight:800; white-space:nowrap;
     color:var(--gold); background:rgba(249,212,35,.14); border:1px solid var(--gold); box-shadow:0 0 12px rgba(249,212,35,.3); }
-  .ctrlbar #shieldProv.active { background:rgba(249,212,35,.14)!important; border-color:var(--gold)!important; color:var(--gold)!important; box-shadow:0 0 14px rgba(249,212,35,.35)!important; }
   .pb.ad { background:rgba(249,212,35,.16); color:var(--gold); box-shadow:0 0 10px rgba(249,212,35,.35); }
   .dd-item .bd.ad { background:rgba(249,212,35,.14); color:var(--gold); }
-  .sw { display:inline-flex; align-items:center; gap:8px; cursor:pointer; font-size:.8rem; font-weight:700; color:var(--muted); user-select:none; }
-  .sw input { position:absolute; opacity:0; pointer-events:none; }
-  .sw .track { position:relative; width:36px; height:20px; border-radius:999px; background:rgba(255,255,255,.12); border:1px solid var(--glass-border); transition:background .2s, border-color .2s; }
-  .sw .track::after { content:""; position:absolute; top:2px; left:2px; width:14px; height:14px; border-radius:50%; background:#d8d1cb; transition:transform .2s, background .2s; }
-  .sw input:checked + .track { background:rgba(249,212,35,.25); border-color:var(--gold); }
-  .sw input:checked + .track::after { transform:translateX(16px); background:var(--gold); }
-  .sw input:checked ~ .swt { color:var(--gold); }
-  .sw input:focus-visible + .track { box-shadow:0 0 0 3px rgba(249,212,35,.25); }
   .form label.chk { text-transform:none; letter-spacing:0; color:var(--text); font-weight:400; font-size:.9rem; }
+
+  /* ============ Title toggle: active side fills its whole half; watch title spacing ============ */
+  #titleLang { padding:0; gap:0; overflow:hidden; border-radius:10px; height:40px; align-items:stretch; }
+  #titleLang .btn { height:100%; min-width:48px; padding:0 16px; border:none; border-radius:0; display:inline-flex; align-items:center; justify-content:center; }
+  #titleLang .btn.active { background:linear-gradient(135deg,#ff4b4b,#a82323)!important; border-color:transparent!important; color:#fff!important; box-shadow:none!important; }
+  .wv-info h1 { margin:0 0 12px; }
+
+  /* ============ Airing status ============ */
+  .tag.air { background:rgba(126,226,160,.14); border-color:rgba(126,226,160,.5); color:#7ee2a0; font-weight:700; }
+  .tag.upc { background:rgba(249,212,35,.14); border-color:var(--gold); color:var(--gold); font-weight:700; }
+  .tag.hia { background:rgba(255,160,64,.14); border-color:rgba(255,160,64,.5); color:#ffa040; font-weight:700; }
+  .tag.can { background:rgba(255,138,138,.12); border-color:rgba(255,138,138,.45); color:#ff8a8a; font-weight:700; }
+  .tag.fin { color:var(--muted); }
+  .dd-item .bd.air { background:rgba(126,226,160,.12); color:#7ee2a0; }
 
   @media (max-width:1000px) { header { flex-wrap:wrap; row-gap:4px; } .nav { order:5; flex:0 0 100%; } .searchpage { padding-top:132px; } .wv-hero { padding-top:140px; } .hero { padding-top:150px; } }
   @media (max-width:900px) { .foot-grid { grid-template-columns:repeat(2,1fr); } .foot-brand, .foot-col.genres { grid-column:1/-1; } }
@@ -537,8 +542,8 @@
       <div class="wv-info">
         <img id="mPoster" alt="">
         <div>
-          <div class="tags" id="mMeta"></div>
           <h1 id="mTitle"></h1>
+          <div class="tags" id="mMeta"></div>
           <p id="mDesc" title="Click to expand"></p>
         </div>
       </div>
@@ -561,7 +566,6 @@
             <span id="embedTools" style="display:contents">
               <select id="provSelect" title="Source"></select>
               <button class="btn iconbtn sq" id="starProv" title="Set this source as your default">&#9734;</button>
-              <button class="btn iconbtn sq" id="shieldProv" title="Ad-free mode"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.2 8.3-8 9-4.8-.7-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg></button>
               <button class="btn iconbtn sq" id="manageProv" title="Manage sources">&#9881;</button>
               <span class="adbadge hidden" id="adfreeBadge" title="Popups are restricted a few seconds after the player loads">&#128737; Ad-free</span>
             </span>
@@ -606,6 +610,7 @@
             <button class="btn" data-v="grid">Grid</button>
           </div>
         </div>
+        <div class="epnote hidden" id="airNote"></div>
         <div class="epnote hidden" id="epNote"></div>
         <div class="tabs" id="tabs"></div>
         <div class="eps" id="eps"></div>
@@ -744,7 +749,6 @@
         </select>
         <label for="pTpl">URL Template</label>
         <input type="text" id="pTpl" placeholder="https://provider.example/embed/{ID}/{EP}/{TYPE}">
-        <label class="chk"><input type="checkbox" id="pAdfree"> Ad-free mode: restrict popups a few seconds after the player loads</label>
         <div class="err" id="pErr"></div>
         <div class="row" style="margin:0">
           <button class="btn primary" id="pSave">Add provider</button>
@@ -775,13 +779,28 @@ const clip = (s, n) => s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s;
 const shortTitle = (a, n = 46) => clip(titleOf(a), n);
 const stripHtml = s => (s || 'No description.').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 const score = a => a.averageScore ? (a.averageScore / 10).toFixed(1) : null;
-const episodeCount = a => a.episodes || (a.nextAiringEpisode ? a.nextAiringEpisode.episode - 1 : 0);
+// Episodes that are actually out: for a show that is still airing, everything before the next scheduled episode
+const episodeCount = a => {
+  if (a.status === 'NOT_YET_RELEASED') return 0;
+  if (a.nextAiringEpisode) return Math.max(0, a.nextAiringEpisode.episode - 1);
+  return a.episodes || 0;
+};
+const STATUS_LABEL = { RELEASING: 'Airing', FINISHED: 'Finished', NOT_YET_RELEASED: 'Upcoming', CANCELLED: 'Cancelled', HIATUS: 'On hiatus' };
+const STATUS_CLS = { RELEASING: 'air', FINISHED: 'fin', NOT_YET_RELEASED: 'upc', CANCELLED: 'can', HIATUS: 'hia' };
+const fmtIn = ts => { let sec = Math.max(0, ts - Date.now() / 1000); const d = Math.floor(sec / 86400); sec -= d * 86400; const h = Math.floor(sec / 3600), m = Math.floor((sec - h * 3600) / 60); return 'in ' + (d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m`); };
+const fmtWhen = ts => new Date(ts * 1000).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+const fmtDate = d => d && d.year ? [d.year, d.month && String(d.month).padStart(2, '0'), d.day && String(d.day).padStart(2, '0')].filter(Boolean).join('-') : '';
+function emptyEpisodesMsg(a) {
+  if (a && a.status === 'NOT_YET_RELEASED') return 'Not released yet' + (fmtDate(a.startDate) ? ` (premieres ${fmtDate(a.startDate)})` : '') + '.';
+  if (a && a.status === 'RELEASING') return 'No episodes have aired yet.';
+  return 'No episode count available.';
+}
 function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
 
 /* ============ AniList GraphQL (id + idMal + relations) ============ */
 const API = 'https://graphql.anilist.co';
 const F = `id idMal title { romaji english native } coverImage { large extraLarge } bannerImage description(asHtml:false)
-  episodes nextAiringEpisode { episode } seasonYear format averageScore genres
+  episodes nextAiringEpisode { episode airingAt } status startDate { year month day } seasonYear format averageScore genres
   relations { edges { relationType node { id idMal title { english romaji native } format seasonYear } } }`;
 const M = args => `media(type: ANIME, isAdult: false, ${args}) { ${F} }`;
 
@@ -827,9 +846,10 @@ async function buildChain(a) {
 /* ============ Providers ============ */
 /* GLOBAL (site-wide) sources: everyone who opens this site gets them. Add them here, or put a providers.json
    next to index.html:  { "default": "my-id", "providers": [ { "id": "my-id", "name": "Name", "idType": "anilist", "template": "https://example.com/embed/{ID}/{EP}/{TYPE}" } ] }
-   idType is "anilist" or "mal". Only list sources you have the right to embed. */
+   idType is "anilist" or "mal". Only list sources you have the right to embed.
+   Add "adfree": true to a source to turn Ad-free mode on for it (popups restricted a few seconds after the player loads); visitors can't change this. */
 const GLOBAL_PROVIDERS = [
-  // { id: 'example', name: 'Example Source', idType: 'anilist', template: 'https://provider.example/embed/{ID}/{EP}/{TYPE}' },
+  // { id: 'example', name: 'Example Source', idType: 'anilist', template: 'https://provider.example/embed/{ID}/{EP}/{TYPE}', adfree: true },   // adfree: true = Ad-free mode ON for this source
 ];
 const GLOBAL_DEFAULT = '';     // id from GLOBAL_PROVIDERS (or providers.json) that everyone starts on, e.g. 'example'
 
@@ -856,12 +876,11 @@ let providerPicked = false;     // true once you switch source yourself this ses
 const getProvider = () => allProviders().find(p => p.id === providerId);
 const saveProviders = () => { store.set('anifin.providers', providers); store.set('anifin.provider', providerId); };
 
-/* Ad-free mode (per source). The embed loads normally, then after a few seconds the frame is sandboxed so it can
-   no longer open popups or navigate the page. Site sources can ship it on with "adfree": true; you can override it. */
+/* Ad-free mode is chosen by the SITE OWNER, per source: put "adfree": true on a source in GLOBAL_PROVIDERS or providers.json.
+   Visitors can't switch it. The embed loads normally, then a few seconds later the frame is sandboxed so it can no longer
+   open popups or navigate the page. (Some players don't react to this, which is why it's opt-in per source.) */
 const AD_SANDBOX = 'allow-scripts allow-same-origin allow-forms', AD_SANDBOX_DELAY = 3500;
-const adfreeMap = () => store.get('anifin.adfree', {});
-const adfreeOn = p => !!p && (p.id in adfreeMap() ? !!adfreeMap()[p.id] : !!p.adfree);
-function setAdfree(id, on) { const m = adfreeMap(); m[id] = !!on; store.set('anifin.adfree', m); }
+const adfreeOn = p => !!p && !!p.global && !!p.adfree;
 let sandboxTimer;
 function applyAdFree(frame, on) {
   clearTimeout(sandboxTimer); frame.removeAttribute('sandbox');            // always start unrestricted so the handshake can finish
@@ -894,7 +913,7 @@ function makeCard(a, onClick, extra, frac) {
   if (score(a)) c.appendChild(el('span', 'badge', '★ ' + score(a)));
   const p = el('p', '', shortTitle(a)); p.title = titleOf(a); c.appendChild(p);
   // Meta line under the (shortened) title: custom text if given, otherwise release year • format
-  const meta = extra || [a.seasonYear, a.format && a.format.replace('_', ' ')].filter(Boolean).join(' • ');
+  const meta = extra || [a.seasonYear, a.format && a.format.replace('_', ' '), a.status === 'RELEASING' && '● Airing'].filter(Boolean).join(' • ');
   if (meta) c.appendChild(el('small', extra ? '' : 'meta', meta));
   if (frac != null) { const pb = el('div', 'pbar'), bar = el('i'); bar.style.width = Math.round(Math.max(0, Math.min(1, frac)) * 100) + '%'; pb.appendChild(bar); c.appendChild(pb); }
   c.onclick = onClick; c._a = a;
@@ -1049,13 +1068,16 @@ function renderWatchHero(a) {
   const d = $('mDesc'); d.textContent = stripHtml(a.description); d.classList.remove('open');
   $('mMeta').innerHTML = '';
   if (score(a)) tag('★ ' + score(a), 'score');
+  if (a.status) tag((a.status === 'RELEASING' ? '● ' : '') + STATUS_LABEL[a.status], STATUS_CLS[a.status]);
+  if (a.status === 'RELEASING' && a.nextAiringEpisode) tag(`Ep ${a.nextAiringEpisode.episode} ${fmtIn(a.nextAiringEpisode.airingAt)}`, 'air');
+  if (a.status === 'NOT_YET_RELEASED' && fmtDate(a.startDate)) tag('Premieres ' + fmtDate(a.startDate), 'upc');
   if (a.format) tag(a.format);
   if (a.seasonYear) tag(a.seasonYear);
   (a.genres || []).slice(0, 4).forEach(g => tag(g));
   tag('AniList ID: ' + a.id, 'hot');
   if (a.idMal) tag('MAL ID: ' + a.idMal, 'hot');
   const n = state.count;
-  tag('Episodes: ' + (a.episodes ?? (n ? n + ' aired' : 'unknown')));
+  tag(a.status === 'RELEASING' ? `Episodes: ${n} of ${a.episodes ?? '?'} aired` : 'Episodes: ' + (a.episodes ?? (n || 'unknown')));
 }
 $('mDesc').onclick = e => e.currentTarget.classList.toggle('open');
 
@@ -1064,9 +1086,11 @@ function renderSeasons() {
   $('seasonBox').classList.toggle('hidden', state.chain.length < 2);
   state.chain.forEach((m, i) => {
     const o = new Option(`${i + 1}. ${clip(titleOf(m), 34)} (${m.format?.replace('_', ' ') || '?'}${m.seasonYear ? ', ' + m.seasonYear : ''})`, m.id);
-    const w = watchedSet(m), total = episodeCount(m) || m.episodes || 0;   // watched badge in the dropdown
+    const w = watchedSet(m), total = m.episodes || episodeCount(m) || 0;   // watched badge in the dropdown
     if (total && w.size >= total) { o.dataset.badge = '✓ Watched'; o.dataset.badgeCls = 'done'; }
     else if (w.size) { o.dataset.badge = `${w.size}/${total || '?'}`; o.dataset.badgeCls = 'prog'; }
+    else if (m.status === 'NOT_YET_RELEASED') o.dataset.badge = 'Upcoming';
+    else if (m.status === 'RELEASING') { o.dataset.badge = 'Airing'; o.dataset.badgeCls = 'air'; }
     sel.appendChild(o);
   });
   sel.value = state.anime?.id;
@@ -1081,7 +1105,9 @@ function renderEpisodes() {
   grid.className = 'eps ' + view;
   document.querySelectorAll('#epView .btn').forEach(b => b.classList.toggle('active', b.dataset.v === view));
   tabs.innerHTML = ''; grid.innerHTML = '';
-  if (!n) { grid.textContent = 'No episode count available.'; $('epStat').textContent = ''; return; }
+  const an = $('airNote'), nx = state.anime && state.anime.status === 'RELEASING' ? state.anime.nextAiringEpisode : null;
+  an.classList.toggle('hidden', !nx); if (nx) an.textContent = `Next: Episode ${nx.episode} airs ${fmtWhen(nx.airingAt)} (${fmtIn(nx.airingAt)}). Unreleased episodes are hidden.`;
+  if (!n) { grid.textContent = emptyEpisodesMsg(state.anime); $('epStat').textContent = ''; return; }
   const seen = state.anime ? watchedSet(state.anime) : new Set();
   let done = 0; for (let i = 1; i <= n; i++) if (seen.has(i)) done++;
   $('epStat').textContent = done ? `${done}/${n} watched` : '';
@@ -1160,20 +1186,7 @@ function toggleDefault(id) {
 }
 $('starProv').onclick = () => toggleDefault(providerId);
 
-function renderAdfree() {
-  const p = getProvider(), on = adfreeOn(p);
-  $('shieldProv').classList.toggle('active', on); $('shieldProv').disabled = !p;
-  $('shieldProv').title = on ? 'Ad-free mode is ON for this source (click to turn off)' : 'Ad-free mode: restrict popups a few seconds after the player loads';
-  $('adfreeBadge').classList.toggle('hidden', !on);
-}
-function toggleAdfree(id) {
-  const p = allProviders().find(x => x.id === id); if (!p) return;
-  const on = !adfreeOn(p); setAdfree(id, on);
-  toast(`Ad-free mode ${on ? 'on' : 'off'} for ${p.name}`);
-  renderProvSelect(); renderProvList(); renderAdfree();
-  if (id === providerId && state.anime && state.ep) playEmbed();          // reload so the change takes effect
-}
-$('shieldProv').onclick = () => toggleAdfree(providerId);
+function renderAdfree() { $('adfreeBadge').classList.toggle('hidden', !adfreeOn(getProvider())); }   // badge only; the owner decides which sources have it
 
 // Optional providers.json shipped next to index.html (site-wide sources, editable without touching this file)
 async function loadSiteProviders() {
@@ -1263,7 +1276,7 @@ $('openSettings').onclick = () => openSettings(); $('manageProv').onclick = () =
 $('settings').addEventListener('mousedown', e => { if (e.target === $('settings') && e.clientX < $('settings').clientWidth) closeSettings(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('settings').classList.contains('open')) closeSettings(); });
 
-function resetForm() { editingId = null; $('pName').value = ''; $('pTpl').value = ''; $('pAdfree').checked = false; $('pType').value = 'anilist'; refreshSelect($('pType')); $('pErr').textContent = ''; $('pSave').textContent = 'Add provider'; $('pCancel').classList.add('hidden'); $('pTestOut').classList.add('hidden'); }
+function resetForm() { editingId = null; $('pName').value = ''; $('pTpl').value = ''; $('pType').value = 'anilist'; refreshSelect($('pType')); $('pErr').textContent = ''; $('pSave').textContent = 'Add provider'; $('pCancel').classList.add('hidden'); $('pTestOut').classList.add('hidden'); }
 $('pCancel').onclick = resetForm;
 
 /* ---- Template test: shows how {ID} / {EP} / {TYPE} resolve and sanity-checks the URL ---- */
@@ -1323,10 +1336,7 @@ function provRow(p, i) {
   info.appendChild(el('small', '', (p.idType === 'mal' ? 'MyAnimeList ID' : 'AniList ID') + (p.global ? ' • provided by this site' : ' • ' + p.template)));   // site source links stay hidden in the UI
   const star = el('button', 'btn' + (isDef ? ' active' : ''), isDef ? '★ Default' : 'Set default');
   star.onclick = () => toggleDefault(p.id);
-  const sw = el('label', 'sw'), cb = el('input'), track = el('span', 'track');
-  cb.type = 'checkbox'; cb.checked = adfreeOn(p); cb.onchange = () => toggleAdfree(p.id);
-  sw.title = 'Ad-free mode: restrict popups a few seconds after the player loads'; sw.append(cb, track, el('span', 'swt', 'Ad-free'));
-  row.append(info, sw, star);
+  row.append(info, star);
   if (!p.global) {                                   // site sources are read-only
     const test = el('button', 'btn', 'Test'), edit = el('button', 'btn', 'Edit'), del = el('button', 'btn', 'Delete');
     test.onclick = () => {
@@ -1334,12 +1344,11 @@ function provRow(p, i) {
       if (open) { open.remove(); test.classList.remove('active'); return; }
       const box = el('div', 'ptest'); row.appendChild(box); test.classList.add('active'); renderTest(box, p.template, p.idType);
     };
-    edit.onclick = () => { editingId = p.id; $('pName').value = p.name; $('pType').value = p.idType; refreshSelect($('pType')); $('pTpl').value = p.template; $('pAdfree').checked = adfreeOn(p); $('pSave').textContent = 'Save changes'; $('pCancel').classList.remove('hidden'); $('pErr').textContent = ''; $('pTestOut').classList.add('hidden'); };
+    edit.onclick = () => { editingId = p.id; $('pName').value = p.name; $('pType').value = p.idType; refreshSelect($('pType')); $('pTpl').value = p.template; $('pSave').textContent = 'Save changes'; $('pCancel').classList.remove('hidden'); $('pErr').textContent = ''; $('pTestOut').classList.add('hidden'); };
     del.onclick = () => {
       if (!confirm(`Delete "${p.name}"?`)) return;
       providers = providers.filter(x => x.id !== p.id);
       if (userDefaultId() === p.id) localStorage.removeItem('anifin.defaultProvider');
-      { const m = adfreeMap(); delete m[p.id]; store.set('anifin.adfree', m); }
       if (providerId === p.id) providerId = resolveProvider();
       saveProviders(); renderProvSelect(); renderProvList(); if (editingId === p.id) resetForm();
       if (state.anime) { updateNav(); playEmbed(); }
@@ -1366,7 +1375,6 @@ $('pSave').onclick = () => {
   if (editingId) { Object.assign(providers.find(p => p.id === editingId), { name, idType, template }); changedId = editingId; }
   else { changedId = uid(); providers.push({ id: changedId, name, idType, template }); }
   if (!providerId) providerId = changedId;
-  setAdfree(changedId, $('pAdfree').checked);
   saveProviders(); renderProvSelect(); resetForm(); renderProvList();
   // First provider added (or active one edited) while watching → start episode 1 / reload current episode
   if (state.anime && (wasEmpty || changedId === providerId)) { updateNav(); selectEpisode(state.ep || 1); }
@@ -2039,6 +2047,7 @@ renderProvSelect();
 loadSiteProviders();
 renderAl();
 localStorage.removeItem('anifin.logo');      // clean up the old custom-logo setting
+localStorage.removeItem('anifin.adfree');    // ad-free is now set by the site owner, not per visitor
 if (alToken()) {   // silently re-check a saved token so the badge reflects reality
   gql('query{ Viewer { id name } }', {}, alToken())
     .then(d => {

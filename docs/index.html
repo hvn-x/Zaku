@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Zaku</title>
+<title>Anime-X</title>
 <link rel="icon" type="image/x-icon" href="Zaku.ico">
 <link rel="icon" type="image/svg+xml" href="Zaku.svg">
 <style>
@@ -79,15 +79,6 @@
   .scroller .card { flex:0 0 var(--card-w); scroll-snap-align:start; }
   .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(clamp(150px,13vw,210px),1fr)); gap:clamp(14px,1.4vw,24px); }
   .status { color:var(--muted); padding:16px 0; }
-  .card { position:relative; border-radius:var(--radius); overflow:hidden; cursor:pointer; background:var(--glass); border:1px solid var(--glass-border); transition:transform .2s, border-color .2s, box-shadow .2s; }
-  .card:hover { transform:translateY(-6px); border-color:var(--accent); box-shadow:0 14px 34px rgba(138,26,26,.5); }
-  .card img { width:100%; aspect-ratio:2/3; object-fit:cover; display:block; background:#111; }
-  .card .badge { position:absolute; top:8px; left:8px; padding:3px 9px; border-radius:999px; font-size:.7rem; font-weight:800; color:#1a1208; background:var(--accent); }
-  .card .rm { position:absolute; top:6px; right:6px; width:26px; height:26px; border-radius:50%; border:none; cursor:pointer; color:#fff; background:rgba(0,0,0,.6); opacity:0; transition:opacity .2s, background .2s; }
-  .card:hover .rm { opacity:1; } .card .rm:hover { background:var(--main-hi); }
-  .card p { margin:0; padding:11px 12px 4px; font-size:.86rem; line-height:1.3; font-weight:600; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-  .card small { display:block; padding:0 12px 11px; font-size:.75rem; color:var(--accent); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .card:not(:has(small)) p { padding-bottom:13px; }
 
   /* ============ Watch page ============ */
   .wv-hero { min-height:clamp(300px,46vh,460px); padding:96px var(--gutter) 40px; }
@@ -193,10 +184,6 @@
   .epstat { margin-left:8px; color:#7ee2a0; text-transform:none; letter-spacing:0; font-weight:700; }
   .eprow { display:flex; margin-bottom:10px; }
   .seg.small .btn { padding:5px 12px; font-size:.78rem; }
-  .card small.meta { color:var(--muted); }
-  .card .stack { position:absolute; top:8px; right:8px; padding:3px 9px; border-radius:999px; font-size:.7rem; font-weight:800; color:var(--accent); background:rgba(0,0,0,.72); border:1px solid var(--accent); }
-  .card.stacked { box-shadow:5px 5px 0 -1px rgba(255,255,255,.07), 10px 10px 0 -2px rgba(255,255,255,.04); }
-  .card.stacked:hover { box-shadow:5px 5px 0 -1px rgba(255,255,255,.07), 10px 10px 0 -2px rgba(255,255,255,.04), 0 14px 34px rgba(138,26,26,.5); }
   .chk { display:flex; gap:10px; align-items:center; cursor:pointer; font-size:.9rem; }
   .chk input { width:18px; height:18px; accent-color:var(--main-hi); }
 
@@ -381,14 +368,11 @@
   .hero-actions .btn { padding:13px 28px; border-radius:12px; font-size:1.02rem; }
   .row-head .btn { width:34px; height:34px; padding:0; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:1.15rem; line-height:1; }
   .row-head .btn:hover { border-color:var(--gold); background:rgba(249,212,35,.14); transform:none; }
-  .tag.score, .card .badge { background:var(--gold); }
+  .tag.score { background:var(--gold); }
   .dots i.on { background:var(--gold); }
   .tabs { gap:8px; }
   .tabs button { border-radius:999px; padding:7px 15px; }
   .tabs button:hover { border-color:var(--crimson); background:rgba(255,75,75,.2); transform:none; }
-  .card:hover { border-color:var(--gold); box-shadow:0 14px 34px rgba(255,75,75,.3); }
-  .card .pbar { height:4px; margin:-4px 12px 12px; border-radius:2px; background:rgba(255,255,255,.1); overflow:hidden; }
-  .card .pbar i { display:block; height:100%; border-radius:2px; background:linear-gradient(90deg,var(--crimson),var(--gold)); }
   .srow { background:linear-gradient(135deg,rgba(255,75,75,.09),rgba(255,255,255,.02) 60%); border-left:3px solid var(--crimson); }
   .srow:nth-child(even) { background:linear-gradient(135deg,rgba(249,212,35,.08),rgba(255,255,255,.02) 60%); border-left-color:var(--gold); }
   .srow:hover { border-color:var(--gold); }
@@ -418,7 +402,6 @@
   .side { background:var(--glass-grad), #15151a; }
   .dialog { background:var(--glass-grad), #1c1c22; }
   .dd-menu { background:var(--glass-grad), rgba(22,22,28,.94); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); }
-  .card { background:var(--glass-grad), var(--glass); }
   .toast, .adbanner { background:var(--glass-grad), rgba(24,24,30,.94); }
   .site-footer { background:var(--glass-grad), #0d0d11; }
   .stabs { background:var(--glass-grad), rgba(0,0,0,.35); }
@@ -461,6 +444,40 @@
   .wv-info { align-items:flex-start; }
   .wv-info p { margin:14px 0 0; }
   .row-head { position:relative; z-index:2; }   /* keep the arrows clickable above the (padded) card scroller */
+
+  /* ============ Show cards: title on the poster, glow ring, tag rail pinned to the bottom ============ */
+  .card { position:relative; display:flex; flex-direction:column; border-radius:16px; overflow:hidden; cursor:pointer; container-type:inline-size;
+    background:var(--glass-grad), #16161b; border:1px solid var(--glass-border); transition:transform .25s ease, box-shadow .25s ease; }
+  .card::before { content:""; position:absolute; inset:0; z-index:4; border-radius:inherit; padding:1.5px; pointer-events:none; opacity:0; transition:opacity .25s;
+    background:linear-gradient(135deg,var(--crimson),var(--gold));
+    -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite:xor; mask-composite:exclude; }
+  .card:hover { transform:translateY(-6px); box-shadow:0 16px 38px rgba(255,75,75,.28); }
+  .card:hover::before { opacity:1; }
+  .card .poster { position:relative; overflow:hidden; background:#111; }
+  .card .poster img { display:block; width:100%; aspect-ratio:2/3; object-fit:cover; transition:transform .45s ease; }
+  .card:hover .poster img { transform:scale(1.07); }
+  .card .poster::after { content:""; position:absolute; left:0; right:0; bottom:0; height:62%; pointer-events:none;
+    background:linear-gradient(to top,rgba(8,8,10,.96) 0%,rgba(8,8,10,.6) 48%,transparent 100%); }
+  .card .poster p { position:absolute; z-index:2; left:0; right:0; bottom:0; margin:0; padding:0 12px 12px; font-size:.88rem; font-weight:700; line-height:1.28; text-shadow:0 1px 6px rgba(0,0,0,.7);
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .card .badge { position:absolute; z-index:3; top:0; left:0; padding:5px 11px 6px 9px; border-radius:0 0 14px 0; font-size:.72rem; font-weight:800; color:#1a1500; background:var(--gold); box-shadow:0 4px 14px rgba(0,0,0,.35); }
+  .card .trail { flex:none; height:40px; display:flex; align-items:center; gap:6px; padding:0 10px; overflow:hidden; border-top:1px solid rgba(255,255,255,.07);
+    background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015)); }
+  .card .ct { flex:none; display:inline-flex; align-items:center; gap:5px; height:22px; padding:0 8px; border-radius:6px; font-size:.68rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase; white-space:nowrap; background:rgba(255,255,255,.07); color:#d8d1cb; }
+  .card .ct.yr { color:var(--gold); background:rgba(249,212,35,.12); }
+  .card .ct.fmt { color:var(--crimson); background:rgba(255,75,75,.14); }
+  .card .ct.air { color:#7ee2a0; background:rgba(126,226,160,.12); }
+  .card .ct.air i { width:7px; height:7px; border-radius:50%; background:#7ee2a0; animation:pulse 1.8s infinite; }
+  @keyframes pulse { 0% { box-shadow:0 0 0 0 rgba(126,226,160,.6); } 70%,100% { box-shadow:0 0 0 6px rgba(126,226,160,0); } }
+  @container (max-width:175px) { .card .ct.air b { display:none; } .card .ct { padding:0 6px; } }      /* narrow cards: airing shows as just the pulsing dot */
+  .card .trail small { display:block; flex:1; min-width:0; padding:0; font-size:.74rem; font-weight:700; color:var(--gold); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .card .pbar { position:absolute; z-index:3; left:0; right:0; bottom:0; height:4px; background:rgba(255,255,255,.14); }
+  .card .pbar i { display:block; height:100%; background:linear-gradient(90deg,var(--crimson),var(--gold)); }
+  .card .rm { position:absolute; z-index:5; top:8px; right:8px; width:26px; height:26px; border-radius:50%; border:none; cursor:pointer; color:#fff; background:rgba(0,0,0,.65); opacity:0; transition:opacity .2s, background .2s; }
+  .card:hover .rm { opacity:1; } .card .rm:hover { background:var(--main-hi); }
+  .card .stack { position:absolute; z-index:5; top:8px; right:8px; padding:3px 10px; border-radius:999px; font-size:.7rem; font-weight:800; color:var(--gold); background:rgba(0,0,0,.72); border:1px solid var(--gold); }
+  .card.stacked { box-shadow:5px 5px 0 -1px rgba(255,255,255,.07), 10px 10px 0 -2px rgba(255,255,255,.04); }
+  .card.stacked:hover { box-shadow:5px 5px 0 -1px rgba(255,255,255,.07), 10px 10px 0 -2px rgba(255,255,255,.04), 0 16px 38px rgba(255,75,75,.28); }
 
   @media (max-width:1000px) { header { flex-wrap:wrap; row-gap:4px; } .nav { order:5; flex:0 0 100%; } .searchpage { padding-top:132px; } .wv-hero { padding-top:140px; } .hero { padding-top:150px; } }
   @media (max-width:900px) { .foot-grid { grid-template-columns:repeat(2,1fr); } .foot-brand, .foot-col.genres { grid-column:1/-1; } }
@@ -923,14 +940,21 @@ function resume(h) {
 
 /* ============ Home: cards, rows, hero ============ */
 function makeCard(a, onClick, extra, frac) {
-  const c = el('div', 'card');
-  const img = el('img'); img.loading = 'lazy'; img.alt = ''; img.src = a.coverImage.large; c.appendChild(img);
-  if (score(a)) c.appendChild(el('span', 'badge', '★ ' + score(a)));
-  const p = el('p', '', shortTitle(a)); p.title = titleOf(a); c.appendChild(p);
-  // Meta line under the (shortened) title: custom text if given, otherwise release year • format
-  const meta = extra || [a.seasonYear, a.format && a.format.replace('_', ' '), a.status === 'RELEASING' && '● Airing'].filter(Boolean).join(' • ');
-  if (meta) c.appendChild(el('small', extra ? '' : 'meta', meta));
-  if (frac != null) { const pb = el('div', 'pbar'), bar = el('i'); bar.style.width = Math.round(Math.max(0, Math.min(1, frac)) * 100) + '%'; pb.appendChild(bar); c.appendChild(pb); }
+  const c = el('div', 'card'), ph = el('div', 'poster'), img = el('img');
+  img.loading = 'lazy'; img.alt = ''; img.src = a.coverImage.large; ph.appendChild(img);
+  if (score(a)) ph.appendChild(el('span', 'badge', '★ ' + score(a)));
+  const p = el('p', '', shortTitle(a)); p.title = titleOf(a); ph.appendChild(p);           // title sits on the poster, so every card is the same height
+  if (frac != null) { const pb = el('div', 'pbar'), bar = el('i'); bar.style.width = Math.round(Math.max(0, Math.min(1, frac)) * 100) + '%'; pb.appendChild(bar); ph.appendChild(pb); }
+  c.appendChild(ph);
+  // Tag rail pinned to the bottom edge (same spot on every card): custom text, or year / format / airing chips
+  const trail = el('div', 'trail');
+  if (extra) trail.appendChild(el('small', '', extra));
+  else {
+    if (a.seasonYear) trail.appendChild(el('span', 'ct yr', a.seasonYear));
+    if (a.format) trail.appendChild(el('span', 'ct fmt', a.format.replace('_', ' ')));
+    if (a.status === 'RELEASING') { const air = el('span', 'ct air'); air.append(el('i'), el('b', '', 'Airing')); trail.appendChild(air); }
+  }
+  c.appendChild(trail);
   c.onclick = onClick; c._a = a;
   return c;
 }
